@@ -25,8 +25,14 @@
   /* Phones: the hero photo and the headline stop sharing space — overlaid type
      landed across her face at narrow widths. Desktop keeps the overlay. */
   @media (max-width: 760px) {
-    #top .hero-media { display: none !important; }
-    #top .hero-media-mobile { display: block !important; }
+    /* Taller frame + a tighter copy block: together these drop the text well
+       below her face, which sits around 40% down the photograph. */
+    #top { min-height: 100svh !important; }
+    #top .hero-copy { padding-bottom: 14px !important; }
+    #top .hero-copy .role { margin-bottom: 12px !important; }
+    #top .hero-copy h1 { font-size: 42px !important; margin-bottom: 14px !important; }
+    #top .hero-copy .lede { font-size: 15px !important; line-height: 1.5 !important; margin-bottom: 18px !important; }
+    #top .hero-copy a { padding: 13px 22px !important; }
   }
 </style>
 </helmet>
@@ -53,18 +59,15 @@
     </div>
   </header>
 
-  <section id="top" style="position: relative; min-height: min(88vh, 140vw); display: flex; align-items: flex-end">
+  <section id="top" style="position: relative; min-height: 88vh; display: flex; align-items: flex-end">
     <div class="hero-media" style="position: absolute; inset: 0">
       <image-slot id="az-hero" shape="rect" src="images/ZZZ_1067-Edit-Edit.jpg" placeholder="Hero photograph"></image-slot>
     </div>
-    <div class="hero-media-mobile" style="display: none; position: absolute; inset: 0">
-      <image-slot id="az-hero-mobile" shape="rect" src="images/hero-mobile.jpg" placeholder="Hero photograph, mobile crop"></image-slot>
-    </div>
     <div class="hero-scrim" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,13,12,0.97) 10%, rgba(14,13,12,0.82) 45%, rgba(14,13,12,0.35) 100%); pointer-events: none"></div>
     <div class="hero-copy" style="position: relative; padding: 0 clamp(20px, 4vw, 40px) clamp(56px, 8vw, 84px); max-width: 1180px; margin: 0 auto; width: 100%; pointer-events: none">
-      <p style="margin: 0 0 22px; font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: #c39554">{{ t.role }}</p>
+      <p class="role" style="margin: 0 0 22px; font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: #c39554">{{ t.role }}</p>
       <h1 style="margin: 0 0 26px; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(56px, 9.4vw, 132px); line-height: 0.9; letter-spacing: -0.015em">Agata Zając</h1>
-      <p style="margin: 0 0 34px; max-width: 52ch; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.6; color: rgba(236,231,223,0.88); text-wrap: pretty">{{ t.heroLede }}</p>
+      <p class="lede" style="margin: 0 0 34px; max-width: 52ch; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.6; color: rgba(236,231,223,0.88); text-wrap: pretty">{{ t.heroLede }}</p>
       <div style="display: flex; gap: 14px; flex-wrap: wrap; pointer-events: auto">
         <a href="#upcoming" style="padding: 15px 28px; background: #c39554; color: #0e0d0c; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase" style-hover="background: #ece7df; color: #0e0d0c">{{ t.ctaDates }}</a>
         <a href="#watch" style="padding: 15px 28px; border: 1px solid rgba(236,231,223,0.34); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase" style-hover="border-color: #c39554; color: #c39554">{{ t.ctaWatch }}</a>
@@ -177,7 +180,7 @@
     <div style="max-width: 1180px; margin: 0 auto">
       <h2 style="margin: 0 0 12px; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 58px); line-height: 1">{{ t.orchestras }}</h2>
       <p style="margin: 0 0 40px; font-size: 15px; letter-spacing: 0.02em; color: rgba(236,231,223,0.6)">{{ t.orchSub }}</p>
-      <iframe src="./orchestra-map.html" title="Map of cities where Agata Zając has conducted" loading="lazy" style="display: block; width: 100%; aspect-ratio: 25 / 18; min-height: 560px; border: 0"></iframe>
+      <iframe src="./orchestra-map.html" title="Map of cities where Agata Zając has conducted" loading="lazy" style="display: block; width: min(100%, 1520px); max-width: calc(100vw - 2 * clamp(20px, 4vw, 40px)); margin-left: 50%; transform: translateX(-50%); aspect-ratio: 25 / 17; min-height: 700px; border: 0"></iframe>
     </div>
   </section>
 

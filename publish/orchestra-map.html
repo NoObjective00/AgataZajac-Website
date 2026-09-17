@@ -24,8 +24,13 @@
 <body>
 <div id="map"><div id="tip"></div></div>
 <script>
+const container = document.getElementById("map");
+const tip = document.getElementById("tip");
 const narrow = window.innerWidth < 760;
-const W = narrow ? 640 : 1000, H = narrow ? 900 : 720;
+// Match the viewBox to the real frame so the projection fills it instead of
+// letterboxing Europe inside dead space.
+const W = Math.max(320, Math.round(container.clientWidth || (narrow ? 640 : 1000)));
+const H = Math.max(320, Math.round(container.clientHeight || (narrow ? 900 : 720)));
 const R_DOT = narrow ? 6 : 4, R_HALO = narrow ? 15 : 11, R_HIT = narrow ? 22 : 16;
 const cities = [
   { n: "Trondheim", c: [10.40, 63.43], e: [["Trondheim Symphony Orchestra & Opera", "Second Prize, Princess Astrid International Music Competition, 2026"]] },
@@ -63,13 +68,13 @@ const cities = [
   { n: "Valletta", c: [14.51, 35.90], e: [["Malta Philharmonic Orchestra", "Special distinction, Malta International Conducting Competition, 2018"]] }
 ];
 
-const frame = { type: "MultiPoint", coordinates: [[-13, 33], [30, 65.5]] };
-const pad = narrow ? 34 : 46;
+// Bounds hug the pinned cities (Lisbon to Istanbul, Trondheim to Valletta)
+// so the frame stays on Europe rather than drifting into ocean.
+const frame = { type: "MultiPoint", coordinates: [[-10.5, 34.6], [29.8, 64.6]] };
+const pad = narrow ? 26 : 34;
 const projection = d3.geoMercator().fitExtent([[pad, pad], [W - pad, H - pad]], frame);
 const path = d3.geoPath(projection);
 
-const container = document.getElementById("map");
-const tip = document.getElementById("tip");
 const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
 
 function showTip(event, d) {
@@ -136,6 +141,12 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").th
   pins.append("circle").attr("r", R_DOT).attr("fill", "#c39554");
   pins.on("mouseenter.style", function () { d3.select(this).select(".halo").attr("r", R_HALO + 5).attr("opacity", 0.3); })
       .on("mouseleave.style", function () { d3.select(this).select(".halo").attr("r", R_HALO).attr("opacity", 0.14); });
+});
+
+let _rt;
+window.addEventListener("resize", () => {
+  clearTimeout(_rt);
+  _rt = setTimeout(() => location.reload(), 300);
 });
 </script>
 </body>
