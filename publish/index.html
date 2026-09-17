@@ -24,6 +24,12 @@
   ::selection { background: #c39554; color: #0e0d0c; }
   /* Phones: the hero photo and the headline stop sharing space — overlaid type
      landed across her face at narrow widths. Desktop keeps the overlay. */
+  .gallery-toggle { display: none; }
+  @media (max-width: 760px) {
+    #gallery .gallery-more { display: none !important; }
+    #gallery[data-open] .gallery-more { display: grid !important; }
+    #gallery .gallery-toggle { display: inline-block; }
+  }
   @media (max-width: 760px) {
     /* Taller frame + a tighter copy block: together these drop the text well
        below her face, which sits around 40% down the photograph. */
@@ -60,7 +66,7 @@
   </header>
 
   <section id="top" style="position: relative; min-height: 88vh; display: flex; align-items: flex-end">
-    <div class="hero-media" style="position: absolute; inset: 0">
+    <div class="hero-media" onClick="{{ heroTap }}" style="position: absolute; inset: 0">
       <image-slot id="az-hero" shape="rect" src="images/ZZZ_1067-Edit-Edit.jpg" placeholder="Hero photograph"></image-slot>
     </div>
     <div class="hero-scrim" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,13,12,0.97) 10%, rgba(14,13,12,0.82) 45%, rgba(14,13,12,0.35) 100%); pointer-events: none"></div>
@@ -74,6 +80,17 @@
       </div>
     </div>
   </section>
+
+  <sc-if value="{{ gameOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: rgba(8,7,6,0.96)">
+      <p style="margin: 0; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: #c39554">Allegro — an encore</p>
+      <canvas ref="{{ gameCanvas }}" style="display: block; width: min(880px, 100%); height: 300px; border: 1px solid rgba(236,231,223,0.18); touch-action: none; cursor: pointer"></canvas>
+      <div style="display: flex; align-items: center; gap: 18px">
+        <p style="margin: 0; font-size: 12px; letter-spacing: 0.06em; color: rgba(236,231,223,0.55)">Tap the stage or press space to jump</p>
+        <button type="button" onClick="{{ closeGame }}" style="appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; padding: 10px 18px; cursor: pointer" style-hover="border-color: #c39554; color: #c39554">Close</button>
+      </div>
+    </div>
+  </sc-if>
 
   <section id="upcoming" style="padding: clamp(60px, 9vw, 104px) clamp(20px, 4vw, 40px); border-top: 1px solid rgba(236,231,223,0.1)">
     <div style="max-width: 1180px; margin: 0 auto">
@@ -150,7 +167,10 @@
         <blockquote style="margin: 0; font-family: 'Bodoni Moda', serif; font-size: clamp(24px, 2.8vw, 36px); line-height: 1.35; text-wrap: pretty">“directing with economy, precision and energy, kept everything neatly together”</blockquote>
         <div style="display: flex; flex-direction: column; gap: 16px">
           <p style="margin: 0; font-size: 16px; line-height: 1.6; color: rgba(236,231,223,0.8); text-wrap: pretty">“under Zając's sure control, all of the sonorities were emphasised”</p>
-          <p style="margin: 0; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #c39554">Barry Creasy · musicOMH · ★★★★★</p>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <img src="https://www.google.com/s2/favicons?domain=musicomh.com&sz=64" alt="" width="20" height="20" loading="lazy" style="display: block; width: 20px; height: 20px; object-fit: contain; border-radius: 2px" />
+            <p style="margin: 0; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #c39554">Barry Creasy · musicOMH · ★★★★★</p>
+          </div>
           <p style="margin: 0; font-size: 14px; line-height: 1.6; color: rgba(236,231,223,0.55)">Britten Sinfonia &amp; ZRI Quintet, Milton Court, London — 17 April 2026</p>
           <a href="https://www.musicomh.com/classical/reviews-classical/re-folking-viennese-classics-review-brahms-schubert-britten-sinfonia-zri-quintet-milton-court" target="_blank" rel="noopener" style="align-self: flex-start; margin-top: 4px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #c39554; border-bottom: 1px solid rgba(195,149,84,0.4); padding-bottom: 3px">{{ t.readReview }}</a>
         </div>
@@ -159,7 +179,10 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1px; margin-top: 56px; background: rgba(236,231,223,0.13)">
         <sc-for list="{{ press }}" as="p" hint-placeholder-count="4">
           <div style="display: flex; flex-direction: column; gap: 14px; background: #141210; padding: 30px 28px">
-            <p style="margin: 0; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ p.outlet }}</p>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <img src="{{ p.icon }}" alt="" width="18" height="18" loading="lazy" style="display: block; width: 18px; height: 18px; object-fit: contain; border-radius: 2px" />
+              <p style="margin: 0; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ p.outlet }}</p>
+            </div>
             <p style="margin: 0; font-family: 'Bodoni Moda', serif; font-size: 19px; line-height: 1.4; text-wrap: pretty">{{ p.quote }}</p>
             <p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgba(236,231,223,0.6)">{{ p.byline }}</p>
             <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top: auto; padding-top: 8px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(236,231,223,0.75)" style-hover="color: #c39554">{{ p.linkLabel }}</a>
@@ -184,7 +207,7 @@
     </div>
   </section>
 
-  <section id="gallery" style="padding: clamp(60px, 9vw, 104px) clamp(20px, 4vw, 40px); border-top: 1px solid rgba(236,231,223,0.1)">
+  <section id="gallery" data-open="{{ galleryOpenAttr }}" style="padding: clamp(60px, 9vw, 104px) clamp(20px, 4vw, 40px); border-top: 1px solid rgba(236,231,223,0.1)">
     <div style="max-width: 1180px; margin: 0 auto">
       <h2 style="margin: 0 0 48px; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 58px); line-height: 1">{{ t.gallery }}</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px">
@@ -196,7 +219,7 @@
         <div style="position: relative; aspect-ratio: 16 / 10; grid-column: span 2"><image-slot id="az-g4" shape="rect" src="images/YYY_4489-Edit.jpg" placeholder="Photograph"></image-slot></div>
         <div style="position: relative; min-height: 167px; height: 100%"><image-slot id="az-g5" shape="rect" src="images/YYY_4890-Edit.jpg" placeholder="Photograph"></image-slot></div>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px">
+      <div class="gallery-more" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px">
         <div style="position: relative; aspect-ratio: 3 / 4"><image-slot id="az-g6" shape="rect" src="images/g--kvkh.jpg" placeholder="Photograph"></image-slot></div>
         <div style="position: relative; aspect-ratio: 3 / 4"><image-slot id="az-g7" shape="rect" src="images/g--33ql.jpg" placeholder="Photograph"></image-slot></div>
         <div style="position: relative; aspect-ratio: 3 / 4"><image-slot id="az-g8" shape="rect" src="images/g--67gz.jpg" placeholder="Photograph"></image-slot></div>
@@ -207,6 +230,7 @@
         <div style="position: relative; aspect-ratio: 3 / 4"><image-slot id="az-g13" shape="rect" src="images/g--tof4.jpg" placeholder="Photograph"></image-slot></div>
         <div style="position: relative; aspect-ratio: 3 / 4"><image-slot id="az-g14" shape="rect" src="images/g--2kab.jpg" placeholder="Photograph"></image-slot></div>
       </div>
+      <button class="gallery-toggle" type="button" onClick="{{ toggleGallery }}" style="margin-top: 24px; appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; padding: 14px 26px; cursor: pointer" style-hover="border-color: #c39554; color: #c39554">{{ galleryLabel }}</button>
     </div>
   </section>
 
@@ -258,6 +282,7 @@ const STRINGS = {
     interviews: "Interviews & announcements",
     orchestras: "Orchestras", orchSub: "Recent and forthcoming collaborations",
     gallery: "Gallery", contact: "Contact",
+    viewAll: "View all photographs", showFewer: "Show fewer",
     contactBody: "For all enquiries and engagements, please contact TACT Artists Management.",
     mgmt: "Worldwide management", follow: "Follow",
     footer: "© 2026 Agata Zając. Biographical details courtesy of TACT Artists Management.",
@@ -285,6 +310,7 @@ const STRINGS = {
     interviews: "Entretiens & annonces",
     orchestras: "Orchestres", orchSub: "Collaborations récentes et à venir",
     gallery: "Galerie", contact: "Contact",
+    viewAll: "Voir toutes les photos", showFewer: "Afficher moins",
     contactBody: "Pour toute demande et tout engagement, merci de contacter TACT Artists Management.",
     mgmt: "Management international", follow: "Suivre",
     footer: "© 2026 Agata Zając. Éléments biographiques fournis par TACT Artists Management.",
@@ -311,6 +337,7 @@ const STRINGS = {
     interviews: "Entrevistas y anuncios",
     orchestras: "Orquestas", orchSub: "Colaboraciones recientes y futuras",
     gallery: "Galería", contact: "Contacto",
+    viewAll: "Ver todas las fotos", showFewer: "Ver menos",
     contactBody: "Para cualquier consulta o contratación, por favor contacte con TACT Artists Management.",
     mgmt: "Management internacional", follow: "Seguir",
     footer: "© 2026 Agata Zając. Datos biográficos facilitados por TACT Artists Management.",
@@ -337,6 +364,7 @@ const STRINGS = {
     interviews: "Wywiady i ogłoszenia",
     orchestras: "Orkiestry", orchSub: "Ostatnie i planowane współprace",
     gallery: "Galeria", contact: "Kontakt",
+    viewAll: "Zobacz wszystkie zdjęcia", showFewer: "Pokaż mniej",
     contactBody: "We wszystkich sprawach i zaproszeniach prosimy o kontakt z TACT Artists Management.",
     mgmt: "Management międzynarodowy", follow: "Obserwuj",
     footer: "© 2026 Agata Zając. Materiały biograficzne dzięki uprzejmości TACT Artists Management.",
@@ -362,6 +390,7 @@ const STRINGS = {
     press: "Presse", readReview: "Kritik lesen →",
     orchestras: "Orchester", orchSub: "Aktuelle und kommende Zusammenarbeiten",
     gallery: "Galerie", contact: "Kontakt",
+    viewAll: "Alle Fotos ansehen", showFewer: "Weniger anzeigen",
     contactBody: "Für alle Anfragen und Engagements wenden Sie sich bitte an TACT Artists Management.",
     mgmt: "Internationales Management", follow: "Folgen",
     footer: "© 2026 Agata Zając. Biografische Angaben mit freundlicher Genehmigung von TACT Artists Management.",
@@ -370,7 +399,224 @@ const STRINGS = {
 };
 
 class Component extends DCLogic {
-  state = { lang: "en" };
+  state = { lang: "en", heroTaps: 0, gameOn: false };
+
+  // Twenty taps on the hero portrait open a small runner: jump the notes.
+  heroTap = () => {
+    const n = (this.state.heroTaps || 0) + 1;
+    if (n >= 20) this.setState({ heroTaps: 0, gameOn: true });
+    else this.setState({ heroTaps: n });
+  };
+  closeGame = () => this.setState({ gameOn: false });
+
+  componentDidUpdate() {
+    if (this.state.gameOn && !this._raf && this._canvas) this._startGame();
+    if (!this.state.gameOn && this._raf) this._stopGame();
+  }
+  componentWillUnmount() { this._stopGame(); }
+
+  _startGame() {
+    const cv = this._canvas;
+    const ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const fit = () => {
+      cv.width = cv.clientWidth * dpr;
+      cv.height = cv.clientHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    fit();
+    this._fit = fit;
+    window.addEventListener("resize", fit);
+
+    const G = { ground: 0, speed: 5.4, score: 0, best: 0, over: false, t: 0 };
+    const player = { x: 68, y: 0, vy: 0, air: false };
+    let notes = [], nextSpawn = 70;
+
+    const reset = () => {
+      G.speed = 5.4; G.score = 0; G.over = false; G.t = 0;
+      player.vy = 0; player.air = false;
+      notes = []; nextSpawn = 70;
+    };
+    const jump = () => {
+      if (G.over) { reset(); return; }
+      if (!player.air) { player.vy = -11.4; player.air = true; }
+    };
+    this._jump = jump;
+
+    const key = (e) => {
+      if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
+      if (e.key === "Escape") this.closeGame();
+    };
+    const tap = (e) => { e.preventDefault(); jump(); };
+    document.addEventListener("keydown", key);
+    cv.addEventListener("pointerdown", tap);
+    this._gameOff = () => {
+      document.removeEventListener("keydown", key);
+      cv.removeEventListener("pointerdown", tap);
+      window.removeEventListener("resize", fit);
+    };
+
+    const draw = () => {
+      const w = cv.clientWidth, h = cv.clientHeight;
+      G.ground = h - 52;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0e0d0c";
+      ctx.fillRect(0, 0, w, h);
+
+      // stave lines, scrolling with the music
+      ctx.strokeStyle = "rgba(236,231,223,0.10)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 4; i++) {
+        const y = G.ground - 78 + i * 15;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(195,149,84,0.55)";
+      ctx.beginPath(); ctx.moveTo(0, G.ground + 1); ctx.lineTo(w, G.ground + 1); ctx.stroke();
+
+      if (!G.over) {
+        G.t++;
+        G.speed = 5.4 + G.score / 900;
+        player.vy += 0.62;
+        player.y += player.vy;
+        if (player.y > 0) { player.y = 0; player.vy = 0; player.air = false; }
+        if (--nextSpawn <= 0) {
+          notes.push({ x: w + 20, tall: Math.random() < 0.34 });
+          nextSpawn = 58 + Math.round(Math.random() * 52);
+        }
+        notes.forEach(n => { n.x -= G.speed; });
+        notes = notes.filter(n => n.x > -40);
+        G.score += 0.16;
+      }
+
+      // obstacles: quarter and eighth notes sitting on the line
+      notes.forEach(n => {
+        const size = n.tall ? 42 : 32;
+        ctx.fillStyle = "#c39554";
+        ctx.font = size + 'px "Bodoni Moda", Didot, Georgia, serif';
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(n.tall ? "\u266B" : "\u2669", n.x, G.ground);
+      });
+
+      // Aga: blonde hair, black blouse, white trousers, gold baton
+      const py = G.ground + player.y;
+      const swing = player.air ? 0.9 : Math.sin(G.t / 4) * 0.9;
+      // The blouse is black, but pure black disappears on a near-black ground,
+      // so it sits a shade up with a cream edge to hold its shape.
+      const SKIN = "#e8c9a8", HAIR = "#d9ab5c", TOP = "#35302a", TROUSER = "#efe7d7";
+
+      // legs (white trousers) — split stride on the ground, together in the air
+      ctx.strokeStyle = TROUSER;
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(player.x, py - 18);
+      ctx.lineTo(player.x - 5 - swing * 5, py - 1);
+      ctx.moveTo(player.x, py - 18);
+      ctx.lineTo(player.x + 5 + swing * 5, py - 1);
+      ctx.stroke();
+
+      // torso (black blouse)
+      ctx.strokeStyle = "rgba(236,231,223,0.42)";
+      ctx.lineWidth = 11;
+      ctx.beginPath();
+      ctx.moveTo(player.x, py - 34);
+      ctx.lineTo(player.x, py - 17);
+      ctx.stroke();
+      ctx.strokeStyle = TOP;
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(player.x, py - 34);
+      ctx.lineTo(player.x, py - 17);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(236,231,223,0.55)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(player.x - 4, py - 33);
+      ctx.lineTo(player.x + 4, py - 33);
+      ctx.stroke();
+
+      // baton arm (sleeve black, forearm skin)
+      ctx.strokeStyle = TOP;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(player.x + 1, py - 32);
+      ctx.lineTo(player.x + 9, py - 34 - swing * 2);
+      ctx.stroke();
+      ctx.strokeStyle = SKIN;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(player.x + 9, py - 34 - swing * 2);
+      ctx.lineTo(player.x + 14, py - 38 - swing * 3);
+      ctx.stroke();
+
+      // trailing arm
+      ctx.strokeStyle = TOP;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(player.x - 1, py - 32);
+      ctx.lineTo(player.x - 8 + swing * 3, py - 24);
+      ctx.stroke();
+
+      // head and hair
+      ctx.fillStyle = HAIR;
+      ctx.beginPath();
+      ctx.ellipse(player.x, py - 42, 8.5, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = SKIN;
+      ctx.beginPath();
+      ctx.ellipse(player.x + 1.5, py - 42.5, 5.2, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = HAIR;
+      ctx.beginPath();
+      ctx.ellipse(player.x - 2.5, py - 45, 6, 5.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(player.x - 3, py - 36, 4.5, 6.5, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // the baton itself
+      ctx.strokeStyle = "#c39554";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(player.x + 14, py - 38 - swing * 3);
+      ctx.lineTo(player.x + 28, py - 46 - swing * 4);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+
+      // collision against a forgiving box
+      if (!G.over) {
+        notes.forEach(n => {
+          const nw = n.tall ? 26 : 20, nh = n.tall ? 30 : 24;
+          const hit = player.x + 8 > n.x && player.x - 8 < n.x + nw &&
+                      py - 8 > G.ground - nh;
+          if (hit) { G.over = true; G.best = Math.max(G.best, Math.floor(G.score)); }
+        });
+      }
+
+      ctx.fillStyle = "rgba(236,231,223,0.75)";
+      ctx.font = '12px Archivo, system-ui, sans-serif';
+      ctx.textAlign = "right";
+      ctx.fillText("BARS " + Math.floor(G.score) + (G.best ? "   BEST " + G.best : ""), w - 14, 24);
+      ctx.textAlign = "left";
+
+      if (G.over) {
+        ctx.fillStyle = "rgba(236,231,223,0.92)";
+        ctx.font = '20px "Bodoni Moda", Didot, Georgia, serif';
+        ctx.textAlign = "center";
+        ctx.fillText("Fermata — tap to play again", w / 2, G.ground - 96);
+        ctx.textAlign = "left";
+      }
+
+      this._raf = requestAnimationFrame(draw);
+    };
+    this._raf = requestAnimationFrame(draw);
+  }
+
+  _stopGame() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+    if (this._gameOff) { this._gameOff(); this._gameOff = null; }
+  }
   setLang(lang) {
     return (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ lang }); };
   }
@@ -381,6 +627,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const t = STRINGS[this.state.lang] || STRINGS.en;
+    const galleryOpen = !!this.state.galleryOpen;
     const M = t.months;
     const localise = (arr) => arr.map(d => Object.assign({}, d, {
       date: d.date.replace("Apr – May", M.AprMay).replace("Oct", M.Oct).replace("Dec", M.Dec).replace("Feb", M.Feb).replace("Mar", M.Mar),
@@ -388,11 +635,21 @@ class Component extends DCLogic {
     }));
     return {
       t,
+      heroTap: this.heroTap,
+      gameOn: this.state.gameOn,
+      closeGame: this.closeGame,
+      gameCanvas: (el) => {
+        this._canvas = el;
+        if (el && this.state.gameOn && !this._raf) this._startGame();
+      },
+      galleryOpenAttr: galleryOpen ? "" : undefined,
+      galleryLabel: galleryOpen ? t.showFewer : t.viewAll,
+      toggleGallery: () => this.setState(s => ({ galleryOpen: !s.galleryOpen })),
       press: [
-        { outlet: "The Guardian", quote: "“Elizabeth Maconchy's Symphony for double string orchestra made a wonderful contrast”", byline: "Andrew Clements — Britten Sinfonia, Milton Court, 2023", linkLabel: t.readReview, href: "https://www.theguardian.com/music/2023/may/25/britten-sinfonia-review-milton-court-thomas-gould" },
-        { outlet: "The Berkshire Eagle", quote: "“It would be hard to imagine a more persuasive or compelling reading”", byline: "Jeremy Yudkin — Rachmaninoff, Isle of the Dead, Tanglewood Music Center Orchestra", linkLabel: t.readReview, href: "https://www.berkshireeagle.com/arts_and_culture/berkshirelandscapes/tanglewood-music-center-orchestra/article_58d9f46c-3605-11ee-9908-3b46e3a9e381.html" },
-        { outlet: "Ruch Muzyczny", quote: "„namalowała prawdziwy muzyczny pejzaż”", byline: "Maria Stachera — Karłowicz, Epizod na maskaradzie", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/2183" },
-        { outlet: "Ruch Muzyczny", quote: "„prowadziła muzyków czytelnymi gestami”", byline: "Gabriela Ułanowska — Noskowski, Morskie Oko; Tchaikovsky Violin Concerto", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/1139" }
+        { outlet: "The Guardian", icon: "https://www.google.com/s2/favicons?domain=theguardian.com&sz=64", quote: "“Elizabeth Maconchy's Symphony for double string orchestra made a wonderful contrast”", byline: "Andrew Clements — Britten Sinfonia, Milton Court, 2023", linkLabel: t.readReview, href: "https://www.theguardian.com/music/2023/may/25/britten-sinfonia-review-milton-court-thomas-gould" },
+        { outlet: "The Berkshire Eagle", icon: "https://www.google.com/s2/favicons?domain=berkshireeagle.com&sz=64", quote: "“It would be hard to imagine a more persuasive or compelling reading”", byline: "Jeremy Yudkin — Rachmaninoff, Isle of the Dead, Tanglewood Music Center Orchestra", linkLabel: t.readReview, href: "https://www.berkshireeagle.com/arts_and_culture/berkshirelandscapes/tanglewood-music-center-orchestra/article_58d9f46c-3605-11ee-9908-3b46e3a9e381.html" },
+        { outlet: "Ruch Muzyczny", icon: "https://www.google.com/s2/favicons?domain=ruchmuzyczny.pl&sz=64", quote: "„namalowała prawdziwy muzyczny pejzaż”", byline: "Maria Stachera — Karłowicz, Epizod na maskaradzie", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/2183" },
+        { outlet: "Ruch Muzyczny", icon: "https://www.google.com/s2/favicons?domain=ruchmuzyczny.pl&sz=64", quote: "„prowadziła muzyków czytelnymi gestami”", byline: "Gabriela Ułanowska — Noskowski, Morskie Oko; Tchaikovsky Violin Concerto", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/1139" }
       ],
       interviews: [
         { label: "Radio Szczecin (PL)", href: "https://radioszczecin.pl/172,8666,agata-zajac-matematyka-i-fizyka-przedmioty-scisl" },
