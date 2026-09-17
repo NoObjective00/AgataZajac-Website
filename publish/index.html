@@ -8,6 +8,10 @@
 <body>
 <x-dc>
 <helmet>
+<link rel="icon" href="./favicon-16.png" sizes="16x16" type="image/png" />
+<link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="icon" href="./favicon-48.png" sizes="48x48" type="image/png" />
+<link rel="apple-touch-icon" href="./favicon-180.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Archivo:wght@400;500&display=swap" rel="stylesheet" />
@@ -139,6 +143,24 @@
           <a href="https://www.musicomh.com/classical/reviews-classical/re-folking-viennese-classics-review-brahms-schubert-britten-sinfonia-zri-quintet-milton-court" target="_blank" rel="noopener" style="align-self: flex-start; margin-top: 4px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #c39554; border-bottom: 1px solid rgba(195,149,84,0.4); padding-bottom: 3px">{{ t.readReview }}</a>
         </div>
       </figure>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1px; margin-top: 56px; background: rgba(236,231,223,0.13)">
+        <sc-for list="{{ press }}" as="p" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 14px; background: #141210; padding: 30px 28px">
+            <p style="margin: 0; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ p.outlet }}</p>
+            <p style="margin: 0; font-family: 'Bodoni Moda', serif; font-size: 19px; line-height: 1.4; text-wrap: pretty">{{ p.quote }}</p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgba(236,231,223,0.6)">{{ p.byline }}</p>
+            <a href="{{ p.href }}" target="_blank" rel="noopener" style="margin-top: auto; padding-top: 8px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(236,231,223,0.75)" style-hover="color: #c39554">{{ p.linkLabel }}</a>
+          </div>
+        </sc-for>
+      </div>
+
+      <p style="margin: 52px 0 18px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ t.interviews }}</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <sc-for list="{{ interviews }}" as="i" hint-placeholder-count="3">
+          <a href="{{ i.href }}" target="_blank" rel="noopener" style="padding: 12px 20px; border: 1px solid rgba(236,231,223,0.22); font-size: 13px; letter-spacing: 0.04em; color: rgba(236,231,223,0.85)" style-hover="border-color: #c39554; color: #c39554">{{ i.label }}</a>
+        </sc-for>
+      </div>
     </div>
   </section>
 
@@ -190,7 +212,10 @@
       <div style="display: flex; flex-direction: column; gap: 14px">
         <p style="margin: 0; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ t.mgmt }}</p>
         <p style="margin: 0; font-family: 'Bodoni Moda', serif; font-size: 27px; line-height: 1.2">TACT Artists Management</p>
-        <a href="https://tact4art.com/profile/AgataZaj%C4%85c" target="_blank" rel="noopener" style="font-size: 15px; color: rgba(236,231,223,0.8); border-bottom: 1px solid rgba(236,231,223,0.25); align-self: flex-start; padding-bottom: 3px">tact4art.com</a>
+        <p style="margin: 0; font-size: 15px; line-height: 1.5; color: rgba(236,231,223,0.8)">Adrian Lavía</p>
+        <a href="mailto:adrian@tact4art.com" style="font-size: 15px; color: rgba(236,231,223,0.8); border-bottom: 1px solid rgba(236,231,223,0.25); align-self: flex-start; padding-bottom: 3px">adrian@tact4art.com</a>
+        <a href="tel:+34606185128" style="font-size: 15px; color: rgba(236,231,223,0.8); border-bottom: 1px solid rgba(236,231,223,0.25); align-self: flex-start; padding-bottom: 3px">+34 606 185 128</a>
+        <a href="https://tact4art.com/profile/AgataZaj%C4%85c" target="_blank" rel="noopener" style="margin-top: 6px; font-size: 13px; letter-spacing: 0.06em; color: rgba(236,231,223,0.55); border-bottom: 1px solid rgba(236,231,223,0.18); align-self: flex-start; padding-bottom: 3px">tact4art.com</a>
       </div>
       <div style="display: flex; flex-direction: column; gap: 14px">
         <p style="margin: 0; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554">{{ t.follow }}</p>
@@ -203,7 +228,7 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;youtubeUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;https://www.youtube.com/results?search_query=Agata+Zaj%C4%85c+conductor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Links&quot;},&quot;showFullList&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Content&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;youtubeUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;https://www.youtube.com/@zajaconductor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Links&quot;},&quot;showFullList&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Content&quot;}}">
 const STRINGS = {
   en: {
     navUpcoming: "Upcoming", navBio: "Biography", navWatch: "Watch", navPress: "Press", navOrch: "Orchestras", navGallery: "Gallery", navContact: "Contact",
@@ -223,6 +248,7 @@ const STRINGS = {
     watchBody: "Concert footage and recent recordings are collected on the YouTube channel.",
     openChannel: "Open channel",
     press: "Press", readReview: "Read the review →",
+    interviews: "Interviews & announcements",
     orchestras: "Orchestras", orchSub: "Recent and forthcoming collaborations",
     gallery: "Gallery", contact: "Contact",
     contactBody: "For all enquiries and engagements, please contact TACT Artists Management.",
@@ -248,6 +274,8 @@ const STRINGS = {
     watchBody: "Les extraits de concerts et les enregistrements récents sont réunis sur la chaîne YouTube.",
     openChannel: "Ouvrir la chaîne",
     press: "Presse", readReview: "Lire la critique →",
+    interviews: "Interviews & Ankündigungen",
+    interviews: "Entretiens & annonces",
     orchestras: "Orchestres", orchSub: "Collaborations récentes et à venir",
     gallery: "Galerie", contact: "Contact",
     contactBody: "Pour toute demande et tout engagement, merci de contacter TACT Artists Management.",
@@ -273,6 +301,7 @@ const STRINGS = {
     watchBody: "Los fragmentos de conciertos y las grabaciones recientes están reunidos en el canal de YouTube.",
     openChannel: "Abrir el canal",
     press: "Prensa", readReview: "Leer la crítica →",
+    interviews: "Entrevistas y anuncios",
     orchestras: "Orquestas", orchSub: "Colaboraciones recientes y futuras",
     gallery: "Galería", contact: "Contacto",
     contactBody: "Para cualquier consulta o contratación, por favor contacte con TACT Artists Management.",
@@ -298,6 +327,7 @@ const STRINGS = {
     watchBody: "Fragmenty koncertów i najnowsze nagrania zebrane są na kanale YouTube.",
     openChannel: "Otwórz kanał",
     press: "Prasa", readReview: "Przeczytaj recenzję →",
+    interviews: "Wywiady i ogłoszenia",
     orchestras: "Orkiestry", orchSub: "Ostatnie i planowane współprace",
     gallery: "Galeria", contact: "Kontakt",
     contactBody: "We wszystkich sprawach i zaproszeniach prosimy o kontakt z TACT Artists Management.",
@@ -351,9 +381,22 @@ class Component extends DCLogic {
     }));
     return {
       t,
+      press: [
+        { outlet: "The Guardian", quote: "“Elizabeth Maconchy's Symphony for double string orchestra made a wonderful contrast”", byline: "Andrew Clements — Britten Sinfonia, Milton Court, 2023", linkLabel: t.readReview, href: "https://www.theguardian.com/music/2023/may/25/britten-sinfonia-review-milton-court-thomas-gould" },
+        { outlet: "The Berkshire Eagle", quote: "“It would be hard to imagine a more persuasive or compelling reading”", byline: "Jeremy Yudkin — Rachmaninoff, Isle of the Dead, Tanglewood Music Center Orchestra", linkLabel: t.readReview, href: "https://www.berkshireeagle.com/arts_and_culture/berkshirelandscapes/tanglewood-music-center-orchestra/article_58d9f46c-3605-11ee-9908-3b46e3a9e381.html" },
+        { outlet: "Ruch Muzyczny", quote: "„namalowała prawdziwy muzyczny pejzaż”", byline: "Maria Stachera — Karłowicz, Epizod na maskaradzie", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/2183" },
+        { outlet: "Ruch Muzyczny", quote: "„prowadziła muzyków czytelnymi gestami”", byline: "Gabriela Ułanowska — Noskowski, Morskie Oko; Tchaikovsky Violin Concerto", linkLabel: t.readReview, href: "https://ruchmuzyczny.pl/article/1139" }
+      ],
+      interviews: [
+        { label: "Radio Szczecin (PL)", href: "https://radioszczecin.pl/172,8666,agata-zajac-matematyka-i-fizyka-przedmioty-scisl" },
+        { label: "Radio Poznań Klasyka (PL)", href: "https://klasyka.radiopoznan.fm/audycja/2022.01.28-klasyka-muzyczna" },
+        { label: "Petra Sittig — The Artist's Voice", href: "https://petrasittigphotography.com/petra-sittig-the-artists-voice/agata-zajac-conductor" },
+        { label: "RNCM — Mills Williams Junior Fellowship", href: "https://www.rncm.ac.uk/news/agata-zajac-is-rncm-mills-williams-junior-fellow-in-conducting/" },
+        { label: "NDR — Conductor Fellows 2024/25", href: "https://www.ndr.de/orchester_chor/elbphilharmonieorchester/orchester/Conductor-Fellows-NDR-Elbphilharmonie-Orchester-Saison-2024-2025,conductorfellows100.html" }
+      ],
       setEn: this.setLang("en"), setFr: this.setLang("fr"), setEs: this.setLang("es"), setPl: this.setLang("pl"), setDe: this.setLang("de"),
       enStyle: this.langStyle("en"), frStyle: this.langStyle("fr"), esStyle: this.langStyle("es"), plStyle: this.langStyle("pl"), deStyle: this.langStyle("de"),
-      youtubeUrl: this.props.youtubeUrl ?? "https://www.youtube.com/results?search_query=Agata+Zaj%C4%85c+conductor",
+      youtubeUrl: this.props.youtubeUrl ?? "https://www.youtube.com/@zajaconductor",
       dates: localise([
         { date: "Oct 2026", orchestra: "Filharmonia Sudecka", url: "https://filharmoniasudecka.pl", host: "filharmoniasudecka.pl", venue: "", programme: "Bach, J. S. – Air on the G String\nBach, J. S. – Brandenburg Concerto No. 3 in G major\nBarber, S. – Adagio for Strings\nVaughan Williams, R. – The Five Variants of Dives and Lazarus\nBartók, B. – Music for Strings, Percussion and Celesta" },
         { date: "Oct 2026", orchestra: "Luxembourg Chamber Orchestra", url: "https://www.ocl.lu", host: "ocl.lu", venue: "Laureates Concert", programme: "Programme to be announced" },

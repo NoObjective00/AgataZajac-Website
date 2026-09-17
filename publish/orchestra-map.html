@@ -13,6 +13,7 @@
     position: absolute; pointer-events: none; opacity: 0; transition: opacity 120ms;
     max-width: 300px; padding: 16px 18px; background: rgba(10,9,8,0.96);
     border: 1px solid rgba(195,149,84,0.45); color: #ece7df; z-index: 5;
+    box-sizing: border-box;
   }
   #tip .city { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554; margin-bottom: 10px; }
   #tip .orch { font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
@@ -79,10 +80,24 @@ function showTip(event, d) {
 }
 function moveTip(event) {
   const r = container.getBoundingClientRect();
-  let x = event.clientX - r.left + 18, y = event.clientY - r.top + 14;
+  if (narrow) {
+    // The pin sits under the user's finger and the frame is small: dock the
+    // card to the bottom of the map rather than chasing the touch point.
+    tip.style.left = "12px";
+    tip.style.right = "12px";
+    tip.style.maxWidth = "none";
+    tip.style.top = "auto";
+    tip.style.bottom = "12px";
+    return;
+  }
+  tip.style.right = "auto";
+  tip.style.bottom = "auto";
   const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = event.clientX - r.left + 18, y = event.clientY - r.top + 14;
   if (x + w > r.width - 8) x = event.clientX - r.left - w - 18;
-  if (y + h > r.height - 8) y = Math.max(8, event.clientY - r.top - h - 14);
+  x = Math.min(Math.max(8, x), Math.max(8, r.width - w - 8));
+  if (y + h > r.height - 8) y = event.clientY - r.top - h - 14;
+  y = Math.min(Math.max(8, y), Math.max(8, r.height - h - 8));
   tip.style.left = x + "px";
   tip.style.top = y + "px";
 }
@@ -101,6 +116,11 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").th
     .on("mouseenter", showTip)
     .on("mousemove", moveTip)
     .on("mouseleave", () => { tip.style.opacity = 0; });
+
+  // Touch: tapping the map background dismisses the card.
+  svg.on("pointerdown", (event) => {
+    if (event.pointerType === "touch" && !event.target.closest("g")) tip.style.opacity = 0;
+  });
 
   pins.append("circle").attr("r", R_HIT).attr("fill", "transparent");
   pins.append("circle").attr("class", "halo").attr("r", R_HALO).attr("fill", "#c39554").attr("opacity", 0.14);

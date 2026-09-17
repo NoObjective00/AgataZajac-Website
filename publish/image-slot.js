@@ -290,14 +290,17 @@
     // look comes from opacity on those parts, not from a baked-in alpha.
     ':host{display:block;position:relative;' +
     '  font:13px/1.3 system-ui,-apple-system,sans-serif;' +
-    '  width:100%;height:100%;aspect-ratio:3/2}' +
+    '  width:100%;height:100%}' +
     '.empty .cap,.empty .sub{opacity:.75}' +
     '.frame{position:absolute;inset:0;overflow:hidden;background:rgba(127,127,127,.08)}' +
     // .frame img (clipped) and .spill (unclipped ghost + handles) share the
     // same left/top/width/height in frame-%, computed by _applyView(), so the
     // inside-mask crop and the outside-mask spill stay pixel-aligned.
     '.frame img{position:absolute;max-width:none;transform:translate(-50%,-50%);' +
-    '  -webkit-user-drag:none;user-select:none;touch-action:none}' +
+    '  -webkit-user-drag:none;user-select:none;touch-action:pan-y pinch-zoom}' +
+    // Reframe mode owns the gesture; outside it, vertical page scrolling must
+    // pass through an image that fills the viewport on a phone.
+    ':host([data-reframe]) .frame img{touch-action:none}' +
     // Reframe mode (double-click): the full image spills past the mask. The
     // spill layer is sized to the IMAGE bounds so its corners are where the
     // resize handles belong. The ghost <img> inside is translucent; the real
@@ -332,7 +335,8 @@
     ':host([data-over]) .frame{outline:2px solid #c96442;outline-offset:-2px;' +
     '  background:rgba(201,100,66,.10)}' +
     '.ring{position:absolute;inset:0;pointer-events:none;border:1.5px dashed currentColor;' +
-    '  opacity:.35;transition:border-color .12s,opacity .12s}' +
+    '  opacity:0;transition:border-color .12s,opacity .12s}' +
+    ':host(:not([data-filled]):hover) .ring{opacity:.35}' +
     ':host([data-over]) .ring{border-color:#c96442;opacity:1}' +
     ':host([data-filled]) .ring{display:none}' +
     // Controls overlay INSIDE the frame, pinned to the top-right corner, so
