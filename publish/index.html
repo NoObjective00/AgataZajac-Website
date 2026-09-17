@@ -22,6 +22,12 @@
   a { color: inherit; text-decoration: none; }
   a:hover { color: #c39554; }
   ::selection { background: #c39554; color: #0e0d0c; }
+  /* Phones: the hero photo and the headline stop sharing space — overlaid type
+     landed across her face at narrow widths. Desktop keeps the overlay. */
+  @media (max-width: 760px) {
+    #top .hero-media { display: none !important; }
+    #top .hero-media-mobile { display: block !important; }
+  }
 </style>
 </helmet>
 
@@ -48,11 +54,14 @@
   </header>
 
   <section id="top" style="position: relative; min-height: min(88vh, 140vw); display: flex; align-items: flex-end">
-    <div style="position: absolute; inset: 0">
+    <div class="hero-media" style="position: absolute; inset: 0">
       <image-slot id="az-hero" shape="rect" src="images/ZZZ_1067-Edit-Edit.jpg" placeholder="Hero photograph"></image-slot>
     </div>
-    <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,13,12,0.97) 10%, rgba(14,13,12,0.82) 45%, rgba(14,13,12,0.35) 100%); pointer-events: none"></div>
-    <div style="position: relative; padding: 0 clamp(20px, 4vw, 40px) clamp(56px, 8vw, 84px); max-width: 1180px; margin: 0 auto; width: 100%; pointer-events: none">
+    <div class="hero-media-mobile" style="display: none; position: absolute; inset: 0">
+      <image-slot id="az-hero-mobile" shape="rect" src="images/hero-mobile.jpg" placeholder="Hero photograph, mobile crop"></image-slot>
+    </div>
+    <div class="hero-scrim" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,13,12,0.97) 10%, rgba(14,13,12,0.82) 45%, rgba(14,13,12,0.35) 100%); pointer-events: none"></div>
+    <div class="hero-copy" style="position: relative; padding: 0 clamp(20px, 4vw, 40px) clamp(56px, 8vw, 84px); max-width: 1180px; margin: 0 auto; width: 100%; pointer-events: none">
       <p style="margin: 0 0 22px; font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: #c39554">{{ t.role }}</p>
       <h1 style="margin: 0 0 26px; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(56px, 9.4vw, 132px); line-height: 0.9; letter-spacing: -0.015em">Agata Zając</h1>
       <p style="margin: 0 0 34px; max-width: 52ch; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.6; color: rgba(236,231,223,0.88); text-wrap: pretty">{{ t.heroLede }}</p>
@@ -168,7 +177,7 @@
     <div style="max-width: 1180px; margin: 0 auto">
       <h2 style="margin: 0 0 12px; font-family: 'Bodoni Moda', serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 58px); line-height: 1">{{ t.orchestras }}</h2>
       <p style="margin: 0 0 40px; font-size: 15px; letter-spacing: 0.02em; color: rgba(236,231,223,0.6)">{{ t.orchSub }}</p>
-      <iframe src="./orchestra-map.html" title="Map of cities where Agata Zając has conducted" loading="lazy" style="display: block; width: 100%; aspect-ratio: 25 / 21; min-height: 680px; border: 0"></iframe>
+      <iframe src="./orchestra-map.html" title="Map of cities where Agata Zając has conducted" loading="lazy" style="display: block; width: 100%; aspect-ratio: 25 / 18; min-height: 560px; border: 0"></iframe>
     </div>
   </section>
 

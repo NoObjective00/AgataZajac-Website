@@ -7,18 +7,18 @@
 <script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; background: #141210; font-family: Archivo, Helvetica, sans-serif; }
-  #map { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
-  svg { display: block; width: 100%; flex: 1; min-height: 0; order: 1; }
+  #map { position: relative; width: 100%; height: 100%; }
+  svg { display: block; width: 100%; height: 100%; }
   #tip {
-    order: 2; flex: 0 0 auto; min-height: 150px; padding: 18px 4px 4px;
-    border-top: 1px solid rgba(236,231,223,0.16); color: #ece7df; box-sizing: border-box;
+    position: absolute; pointer-events: none; opacity: 0; transition: opacity 120ms;
+    max-width: 300px; padding: 16px 18px; background: rgba(10,9,8,0.96);
+    border: 1px solid rgba(195,149,84,0.45); color: #ece7df; z-index: 5;
+    box-sizing: border-box;
   }
-  #tip .hint { font-size: 13px; letter-spacing: 0.02em; color: rgba(236,231,223,0.45); margin: 0; }
   #tip .city { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554; margin-bottom: 10px; }
   #tip .orch { font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
   #tip .work { font-size: 12.5px; line-height: 1.45; color: rgba(236,231,223,0.68); margin-bottom: 10px; }
   #tip .orch:last-child, #tip .work:last-child { margin-bottom: 0; }
-  #tip .entries { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 28px; }
 </style>
 </head>
 <body>
@@ -72,17 +72,36 @@ const container = document.getElementById("map");
 const tip = document.getElementById("tip");
 const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
 
-const HINT = '<p class="hint">Hover a city to see the orchestras and programmes.</p>';
-const TOUCH_HINT = '<p class="hint">Tap a city to see the orchestras and programmes.</p>';
-const idleHint = () => (narrow ? TOUCH_HINT : HINT);
-tip.innerHTML = idleHint();
-
 function showTip(event, d) {
-  tip.innerHTML = '<div class="city">' + d.n + '</div><div class="entries">' +
-    d.e.map(([o, w]) => '<div><div class="orch">' + o + '</div>' +
-      (w ? '<div class="work">' + w + '</div>' : '') + '</div>').join('') + '</div>';
+  tip.innerHTML = '<div class="city">' + d.n + '</div>' + d.e.map(([o, w]) =>
+    '<div class="orch">' + o + '</div>' + (w ? '<div class="work">' + w + '</div>' : '')).join('');
+  tip.style.opacity = 1;
+  moveTip(event);
 }
-function clearTip() { tip.innerHTML = idleHint(); }
+function hideTip() { tip.style.opacity = 0; }
+
+// Places the card near the pin but always fully inside the frame. On a phone
+// it docks along the bottom, clear of the finger and of the other pins.
+function moveTip(event) {
+  const r = container.getBoundingClientRect();
+  if (narrow) {
+    tip.style.left = "10px";
+    tip.style.right = "10px";
+    tip.style.maxWidth = "none";
+    tip.style.top = "auto";
+    tip.style.bottom = "10px";
+    return;
+  }
+  tip.style.right = "auto";
+  tip.style.bottom = "auto";
+  tip.style.maxWidth = "300px";
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = event.clientX - r.left + 18, y = event.clientY - r.top + 14;
+  if (x + w > r.width - 8) x = event.clientX - r.left - w - 18;
+  if (y + h > r.height - 8) y = event.clientY - r.top - h - 14;
+  tip.style.left = Math.min(Math.max(8, x), Math.max(8, r.width - w - 8)) + "px";
+  tip.style.top = Math.min(Math.max(8, y), Math.max(8, r.height - h - 8)) + "px";
+}
 
 d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").then(topology => {
   const countries = topojson.feature(topology, topology.objects.countries);
@@ -96,11 +115,20 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").th
     .attr("transform", d => `translate(${projection(d.c).join(",")})`)
     .style("cursor", "pointer")
     .on("mouseenter", showTip)
-    .on("mouseleave", clearTip);
+    .on("mousemove", moveTip)
+    .on("mouseleave", (event) => { if (event.pointerType !== "touch") hideTip(); })
+    // Touch never fires a reliable mouseenter on an SVG child, so drive the
+    // card from the tap itself and swallow the synthetic mouse events after.
+    .on("pointerdown", function (event, d) {
+      if (event.pointerType !== "touch") return;
+      event.preventDefault();
+      showTip(event, d);
+    })
+    .on("touchstart", (event) => { event.preventDefault(); }, { passive: false });
 
-  // Touch: tapping the map background clears the panel back to its hint.
+  // Tapping bare map dismisses the card.
   svg.on("pointerdown", (event) => {
-    if (event.pointerType === "touch" && !event.target.closest("g")) clearTip();
+    if (!event.target.closest("g")) hideTip();
   });
 
   pins.append("circle").attr("r", R_HIT).attr("fill", "transparent");
