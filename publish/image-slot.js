@@ -393,7 +393,11 @@
     // the overlay reads as one line of text.
     '.credit a{color:inherit;text-decoration:none}' +
     '.credit a:hover,.credit a:focus-visible{text-decoration:underline}' +
-    ':host([data-filled][data-credit]) .credit{display:block}' +
+    // React reconciliation in the DC runtime resets this element's attributes,
+    // stripping the component's own data-filled/data-credit marks — so the
+    // chip keys off the AUTHORED credit attribute, which always survives.
+    ':host([data-filled][data-credit]) .credit,' +
+    ':host([credit]) .credit{display:block}' +
     // Exports must ship JUST the image — no hover controls, no credit chip
     // (the host marks <html data-om-exporting> for the capture window; the
     // page-level hide script can't reach shadow DOM, this rule can).
@@ -442,7 +446,7 @@
 
   class ImageSlot extends HTMLElement {
     static get observedAttributes() {
-      return ['shape', 'radius', 'mask', 'fit', 'placeholder', 'src', 'id', 'credit', 'credit-href'];
+      return ['shape', 'radius', 'mask', 'fit', 'placeholder', 'src', 'id', 'alt', 'credit', 'credit-href'];
     }
 
     /** Duplicate-slide hook (called by deck-stage, see its
@@ -1151,6 +1155,8 @@
           this._releaseMask();
         }
         this._hidShowing = false;
+        // Authored alt text — screen readers announce it, crawlers index it.
+        this._img.alt = this.getAttribute('alt') || '';
         this._img.style.display = 'block';
         this._empty.style.display = 'none';
         this.setAttribute('data-filled', '');

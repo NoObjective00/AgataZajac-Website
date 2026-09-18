@@ -2,27 +2,60 @@
 
 Static website. Plain HTML, CSS and JavaScript; no build step.
 
-Version: **v1.0.2**
+Version: **v1.1.2**
 
 ## Structure
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The whole site — hero, upcoming, biography, watch, press, orchestras, gallery, contact |
+| `index.html` | English site — hero, upcoming, biography, watch, press, orchestras, gallery, contact |
+| `fr/`, `es/`, `de/`, `pl/` | The same site, one static page per language |
 | `support.js` | Runtime the page loads |
 | `image-slot.js` | Image component used by every photograph |
 | `orchestra-map.html` | Europe map, loaded in an iframe from the Orchestras section |
 | `images/` | Photographs, web-sized |
 | `favicon-*.png` | Favicon set (AZ monogram) |
 | `CNAME` | Custom domain for GitHub Pages |
+| `robots.txt`, `sitemap.xml` | Crawler directives |
+| `about.html`, `calendar.html`, `videos.html`, `photos.html`, `press.html`, `contact.html` | Redirect stubs for the previous site's URLs |
+| `_redirects` | Cloudflare Pages 301 rules (ignored by GitHub Pages) |
+| `404.html` | Not-found page |
 
 ## Publishing
+
+All pages share the assets at the root (`support.js`, `images/`, `orchestra-map.html`),
+so keep the folder structure exactly as it is.
 
 GitHub Pages: upload the contents of this folder to the repository root, then
 Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 
 Cloudflare Pages: framework preset None, no build command, output directory `/`.
 Delete `CNAME` there — Cloudflare sets custom domains in its own dashboard.
+
+## v1.1.2
+
+- Facebook added to Follow and to the structured-data profile list
+- Map fragment and 404 page excluded from search results
+- Smaller map pins on mobile
+
+## v1.1.1
+
+- Redirects from the previous site's six inner URLs to the matching sections
+- `404.html` for anything else
+
+## v1.1.0
+
+- Five static language pages: `/`, `/fr/`, `/es/`, `/de/`, `/pl/`
+- Per-language title, meta description, Open Graph, canonical and hreflang
+  cluster; sitemap lists all five with alternates
+- Language switcher is now real links between the URLs, so crawlers follow them
+
+## v1.0.3
+
+- SEO/AEO: static title, meta description, canonical URL, Open Graph and
+  Twitter cards, Person + MusicEvent structured data, sitemap and robots.txt
+- Alt text on every photograph; photography credited to Oliwia Szygulska
+- `index.html` is generated from the source by `build-publish.js`
 
 ## v1.0.2
 

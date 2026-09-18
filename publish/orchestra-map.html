@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Orchestras map</title>
+<title>Orchestras map — Agata Zając</title>
+<meta name="robots" content="noindex, follow" />
 <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
 <style>
@@ -31,7 +32,7 @@ const narrow = window.innerWidth < 760;
 // letterboxing Europe inside dead space.
 const W = Math.max(320, Math.round(container.clientWidth || (narrow ? 640 : 1000)));
 const H = Math.max(320, Math.round(container.clientHeight || (narrow ? 900 : 720)));
-const R_DOT = narrow ? 6 : 4, R_HALO = narrow ? 15 : 11, R_HIT = narrow ? 22 : 16;
+const R_DOT = narrow ? 4.5 : 4, R_HALO = narrow ? 12 : 11, R_HIT = narrow ? 22 : 16;
 const cities = [
   { n: "Trondheim", c: [10.40, 63.43], e: [["Trondheim Symphony Orchestra & Opera", "Second Prize, Princess Astrid International Music Competition, 2026"]] },
   { n: "Malmö", c: [13.00, 55.60], e: [["Malmö Opera", ""]] },
