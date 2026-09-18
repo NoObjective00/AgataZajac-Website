@@ -276,6 +276,12 @@
   a { color: inherit; text-decoration: none; }
   a:hover { color: #c39554; }
   ::selection { background: #c39554; color: #0e0d0c; }
+  /* While the game is open the whole page still sat in the compositor behind
+     it — sixteen photographs, a live d3 map in an iframe, and a blurred
+     backdrop-filter header. On iOS that alone halved the frame rate. */
+  [data-game] > header { display: none !important; }
+  [data-game] > section { visibility: hidden !important; }
+  [data-game] iframe { display: none !important; }
   /* Phones: the hero photo and the headline stop sharing space — overlaid type
      landed across her face at narrow widths. Desktop keeps the overlay. */
   .gallery-toggle { display: none; }
@@ -316,7 +322,7 @@
 </style>
 </helmet>
 
-<div style="font-family: Archivo, Helvetica, sans-serif; color: #ece7df; background: #0e0d0c; width: 100%; overflow-x: clip">
+<div data-game="{{ gameOnAttr }}" style="font-family: Archivo, Helvetica, sans-serif; color: #ece7df; background: #0e0d0c; width: 100%; overflow-x: clip">
 
   <header data-nav="{{ navOpenAttr }}" style="position: sticky; top: 0; z-index: 50; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: max(14px, env(safe-area-inset-top)) clamp(20px, 4vw, 40px) 14px; background: rgba(14,13,12,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(236,231,223,0.12)">
     <a href="#top" style="font-family: 'Bodoni Moda', serif; font-size: 20px; letter-spacing: 0.06em">Agata Zając</a>
@@ -722,7 +728,12 @@ class Component extends DCLogic {
   // tempo, so the music accelerates with the runner rather than waiting for
   // the track's own accelerando, and it loops if a game outlasts it.
   _startMusic() {
-    if (this._track) return;
+    if (this._track) {
+      if (this._ctx && this._ctx.state === "suspended") this._ctx.resume();
+      const r = this._track.play();
+      if (r && r.catch) r.catch(() => {});
+      return;
+    }
     // The language pages live one level down (/fr/, /es/…) but share the
     // audio at the root, so the path is resolved rather than hard-coded.
     const inLangFolder = /\/(fr|es|de|pl)\/$/.test(window.location.pathname);
@@ -732,8 +743,27 @@ class Component extends DCLogic {
     // Nothing is fetched until the first jump, so visitors who never find the
     // easter egg never download it.
     el.preload = "none";
+    el.crossOrigin = "anonymous";
+    el.setAttribute("playsinline", "");
     el.volume = this._muted ? 0 : 0.55;
     this._track = el;
+    // iOS silences plain <audio> when the ring/silent switch is on, but plays
+    // audio routed through an AudioContext. Piping the element through one
+    // costs nothing elsewhere and keeps playbackRate working.
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC && !this._ctx) {
+        this._ctx = new AC();
+        this._ctxGain = this._ctx.createGain();
+        this._ctxGain.gain.value = 1;
+        this._ctx.createMediaElementSource(el).connect(this._ctxGain);
+        this._ctxGain.connect(this._ctx.destination);
+      }
+      if (this._ctx && this._ctx.state === "suspended") this._ctx.resume();
+    } catch (e) {}
+    // Safari needs an explicit load() when preload is off, or play() resolves
+    // against an empty buffer and nothing is heard.
+    try { el.load(); } catch (e) {}
     // play() must be called straight from the gesture: it starts the load
     // itself, so waiting on readyState or canplay first would mean waiting
     // for an event that never fires while preload is off — and the gesture
@@ -755,6 +785,11 @@ class Component extends DCLogic {
   _stopMusic() {
     if (this._rateTimer) clearInterval(this._rateTimer);
     this._rateTimer = null;
+    // The context is kept for the session: createMediaElementSource can only
+    // be called once per element, and re-creating contexts leaks on iOS.
+    if (this._ctx && this._ctx.state === "running") {
+      try { this._ctx.suspend(); } catch (e) {}
+    }
     if (this._track) {
       const el = this._track;
       this._track = null;
@@ -1066,6 +1101,7 @@ class Component extends DCLogic {
     }));
     return {
       t,
+      gameOnAttr: this.state.gameOn ? "" : undefined,
       navOpenAttr: this.state.navOpen ? "" : undefined,
       navLabel: this.state.navOpen ? t.close : t.menu,
       toggleNav: () => this.setState(s => ({ navOpen: !s.navOpen })),
