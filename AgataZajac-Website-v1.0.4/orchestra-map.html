@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Orchestras map — Agata Zając</title>
+<meta name="robots" content="noindex, follow" />
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #141210; font-family: Archivo, Helvetica, sans-serif; }
+  #map { position: relative; width: 100%; height: 100%; }
+  svg { display: block; width: 100%; height: 100%; }
+  #tip {
+    position: absolute; pointer-events: none; opacity: 0; transition: opacity 120ms;
+    max-width: 300px; padding: 16px 18px; background: rgba(10,9,8,0.96);
+    border: 1px solid rgba(195,149,84,0.45); color: #ece7df; z-index: 5;
+    box-sizing: border-box;
+  }
+  #tip .city { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #c39554; margin-bottom: 10px; }
+  #tip .orch { font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
+  #tip .work { font-size: 12.5px; line-height: 1.45; color: rgba(236,231,223,0.68); margin-bottom: 10px; }
+  #tip .orch:last-child, #tip .work:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div id="map">
+  <div id="zoom"><button id="zin" type="button" aria-label="Zoom in">+</button><button id="zout" type="button" aria-label="Zoom out">−</button></div>
+  <div id="tip"></div>
+</div>
+<script>
+const container = document.getElementById("map");
+const tip = document.getElementById("tip");
+const narrow = window.innerWidth < 760;
+// Match the viewBox to the real frame so the projection fills it instead of
+// letterboxing Europe inside dead space.
+const W = Math.max(320, Math.round(container.clientWidth || (narrow ? 640 : 1000)));
+const H = Math.max(320, Math.round(container.clientHeight || (narrow ? 900 : 720)));
+const R_DOT = narrow ? 4.5 : 4, R_HALO = narrow ? 12 : 11, R_HIT = narrow ? 22 : 16;
+const cities = [
+  { n: "Trondheim", c: [10.40, 63.43], e: [["Trondheim Symphony Orchestra & Opera", "Second Prize, Princess Astrid International Music Competition, 2026"]] },
+  { n: "Malmö", c: [13.00, 55.60], e: [["Malmö Opera", ""]] },
+  { n: "Dublin", c: [-6.26, 53.35], e: [["National Symphony Orchestra, Ireland", "Viennese and Hungarian operetta, with soprano Ami Hewitt"]] },
+  { n: "Manchester", c: [-2.24, 53.48], e: [["The Hallé", "Second Prize and audience vote, Siemens Hallé International Conductors' Competition, 2023"], ["BBC Philharmonic", "Anna Clyne — This Midnight Hour"], ["Manchester Camerata", "Dvořák — Symphony No. 7"], ["Royal Northern College of Music", "Mills Williams Junior Fellow in Conducting"]] },
+  { n: "Leicester", c: [-1.13, 52.64], e: [["Bardi Symphony Orchestra", "Bacewicz — Overture; Elgar — Cello Concerto; Sibelius — Symphony No. 5 (Mar 2027)"]] },
+  { n: "Cambridge", c: [0.12, 52.20], e: [["Britten Sinfonia", ""]] },
+  { n: "London", c: [-0.13, 51.51], e: [["National Youth Orchestra of Great Britain", ""]] },
+  { n: "Szczecin", c: [14.55, 53.43], e: [["Szczecin Philharmonic", ""]] },
+  { n: "Berlin", c: [13.40, 52.52], e: [["Rundfunk-Sinfonieorchester Berlin", "Singing Christmas – Weihnachtszauber (Dec 2026)"]] },
+  { n: "Hamburg", c: [9.99, 53.55], e: [["NDR Elbphilharmonie Orchester", "Conductor Fellow 2024/25, under Alan Gilbert"]] },
+  { n: "Hannover", c: [9.73, 52.37], e: [["NDR Radiophilharmonie", "Mendelssohn — Die Hebriden; Schumann — Cello Concerto; Beethoven — Symphony No. 6 (Apr–May 2027)"]] },
+  { n: "Toruń", c: [18.60, 53.01], e: [["Toruń Symphony Orchestra", "Resident Conductor"]] },
+  { n: "Poznań", c: [16.93, 52.41], e: [["Poznań Philharmonic Orchestra", ""], ["Poznań Academy of Music", "Conducting studies"]] },
+  { n: "Warsaw", c: [21.01, 52.23], e: [["Polish Royal Opera, Nowa Miodowa", "Schubert — Winterreise, arr. Matesic (Dec 2026)"], ["Warsaw Chamber Opera", "Assistant conductor: Mozart — Die Entführung aus dem Serail, Idomeneo; Moniuszko — Halka"]] },
+  { n: "Leipzig", c: [12.37, 51.34], e: [["Mendelssohn Academy Orchestra", "Augusta Read Thomas — Dance Mobile, Gewandhaus zu Leipzig"]] },
+  { n: "Zielona Góra", c: [15.51, 51.94], e: [["Zielona Góra Philharmonic", ""]] },
+  { n: "Wałbrzych", c: [16.28, 50.77], e: [["Filharmonia Sudecka", "Resident Conductor. Bach, Barber, Vaughan Williams, Bartók (Oct 2026)"]] },
+  { n: "Karlovy Vary", c: [12.87, 50.23], e: [["Karlovy Vary Symphony Orchestra", ""]] },
+  { n: "Opole", c: [17.93, 50.67], e: [["Opole Philharmonic", ""]] },
+  { n: "Katowice", c: [19.02, 50.26], e: [["Polish National Radio Symphony Orchestra (NOSPR)", "Brahms — Symphony No. 1"]] },
+  { n: "Amiens", c: [2.30, 49.89], e: [["Orchestre de Picardie", ""]] },
+  { n: "Luxembourg", c: [6.13, 49.61], e: [["Luxembourg Chamber Orchestra", "Laureates Concert (Oct 2026)"]] },
+  { n: "Metz", c: [6.18, 49.12], e: [["Orchestre national de Metz", ""]] },
+  { n: "Graz", c: [15.44, 47.07], e: [["Grazer Philharmoniker", ""]] },
+  { n: "Gstaad", c: [7.29, 46.47], e: [["Gstaad Festival Orchestra", "Gstaad Conducting Academy. Beethoven — Symphony No. 5"]] },
+  { n: "Turin", c: [7.69, 45.07], e: [["Turin", "Orchestra to be confirmed"]] },
+  { n: "Sanremo", c: [7.78, 43.82], e: [["Orchestra Sinfonica di Sanremo", ""]] },
+  { n: "Santiago de Compostela", c: [-8.54, 42.88], e: [["Real Filharmonía de Galicia", ""]] },
+  { n: "Barcelona", c: [2.17, 41.39], e: [["Orquesta Sinfónica de Barcelona", "Assistant Conductor to Ludovic Morlot, 2023–25"]] },
+  { n: "Istanbul", c: [28.98, 41.01], e: [["Istanbul", "Orchestra to be confirmed"]] },
+  { n: "Lisbon", c: [-9.14, 38.72], e: [["Gulbenkian Orchestra", "Mozart, Beethoven, Paradis, Haydn (Feb 2027)"]] },
+  { n: "Athens", c: [23.73, 37.98], e: [["Athens Philharmonia", "New Year concert tour, China"], ["Greek National Radio Symphony Orchestra", ""]] },
+  { n: "Valletta", c: [14.51, 35.90], e: [["Malta Philharmonic Orchestra", "Special distinction, Malta International Conducting Competition, 2018"]] }
+];
+
+// Bounds hug the pinned cities (Lisbon to Istanbul, Trondheim to Valletta)
+// so the frame stays on Europe rather than drifting into ocean.
+const frame = { type: "MultiPoint", coordinates: [[-10.5, 34.6], [29.8, 64.6]] };
+const pad = narrow ? 26 : 34;
+const projection = d3.geoMercator().fitExtent([[pad, pad], [W - pad, H - pad]], frame);
+const path = d3.geoPath(projection);
+
+const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+
+function showTip(event, d) {
+  tip.innerHTML = '<div class="city">' + d.n + '</div>' + d.e.map(([o, w]) =>
+    '<div class="orch">' + o + '</div>' + (w ? '<div class="work">' + w + '</div>' : '')).join('');
+  tip.style.opacity = 1;
+  moveTip(event);
+}
+function hideTip() { tip.style.opacity = 0; }
+
+// Places the card near the pin but always fully inside the frame. On a phone
+// it docks along the bottom, clear of the finger and of the other pins.
+function moveTip(event) {
+  const r = container.getBoundingClientRect();
+  if (narrow) {
+    tip.style.left = "10px";
+    tip.style.right = "10px";
+    tip.style.maxWidth = "none";
+    tip.style.top = "auto";
+    tip.style.bottom = "10px";
+    return;
+  }
+  tip.style.right = "auto";
+  tip.style.bottom = "auto";
+  tip.style.maxWidth = "300px";
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = event.clientX - r.left + 18, y = event.clientY - r.top + 14;
+  if (x + w > r.width - 8) x = event.clientX - r.left - w - 18;
+  if (y + h > r.height - 8) y = event.clientY - r.top - h - 14;
+  tip.style.left = Math.min(Math.max(8, x), Math.max(8, r.width - w - 8)) + "px";
+  tip.style.top = Math.min(Math.max(8, y), Math.max(8, r.height - h - 8)) + "px";
+}
+
+d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").then(topology => {
+  const countries = topojson.feature(topology, topology.objects.countries);
+  const world = svg.append("g");
+  world.append("g").selectAll("path").data(countries.features).join("path")
+    .attr("d", path)
+    .attr("fill", "#26221d")
+    .attr("stroke", "#141210")
+    .attr("stroke-width", 1);
+
+  const pins = world.append("g").selectAll("g").data(cities).join("g")
+    .attr("transform", d => `translate(${projection(d.c).join(",")})`)
+    .style("cursor", "pointer")
+    .on("mouseenter", showTip)
+    .on("mousemove", moveTip)
+    .on("mouseleave", (event) => { if (event.pointerType !== "touch") hideTip(); })
+
+  // A tap rarely lands exactly on a 4px dot, so snap to the nearest city
+  // within reach and only dismiss when the tap is genuinely far from any pin.
+  const dots = cities.map(d => { const [x, y] = projection(d.c); return { x, y, d }; });
+  svg.on("pointerdown", (event) => {
+    if (event.pointerType !== "touch") {
+      if (!event.target.closest("g")) hideTip();
+      return;
+    }
+    const t = d3.zoomTransform(svg.node());
+    const [mx, my] = d3.pointer(event, svg.node());
+    let best = null, bestD = Infinity;
+    for (const p of dots) {
+      const sx = p.x * t.k + t.x, sy = p.y * t.k + t.y;
+      const dist = Math.hypot(sx - mx, sy - my);
+      if (dist < bestD) { bestD = dist; best = p.d; }
+    }
+    if (best && bestD < 34) showTip(event, best);
+    else hideTip();
+  });
+
+  let k = 1;
+  const zoom = d3.zoom()
+    .scaleExtent([1, 6])
+    .translateExtent([[0, 0], [W, H]])
+    .on("zoom", (event) => {
+      k = event.transform.k;
+      world.attr("transform", event.transform);
+      // Counter-scale so dots and tap targets stay the same size on screen.
+      world.selectAll("circle").attr("r", function () {
+        return Number(this.dataset.r) / k;
+      });
+      world.selectAll("path").attr("stroke-width", 1 / k);
+    });
+  svg.call(zoom).on("dblclick.zoom", null);
+  document.getElementById("zin").onclick = () => svg.transition().duration(220).call(zoom.scaleBy, 1.7);
+  document.getElementById("zout").onclick = () => svg.transition().duration(220).call(zoom.scaleBy, 1 / 1.7);
+
+  pins.append("circle").attr("r", R_HIT).attr("data-r", R_HIT).attr("fill", "transparent");
+  pins.append("circle").attr("class", "halo").attr("r", R_HALO).attr("data-r", R_HALO).attr("fill", "#c39554").attr("opacity", 0.14);
+  pins.append("circle").attr("r", R_DOT).attr("data-r", R_DOT).attr("fill", "#c39554");
+  pins.on("mouseenter.style", function () { d3.select(this).select(".halo").attr("r", R_HALO + 5).attr("opacity", 0.3); })
+      .on("mouseleave.style", function () { d3.select(this).select(".halo").attr("r", R_HALO).attr("opacity", 0.14); });
+});
+
+let _rt;
+window.addEventListener("resize", () => {
+  clearTimeout(_rt);
+  _rt = setTimeout(() => location.reload(), 300);
+});
+</script>
+</body>
+</html>
