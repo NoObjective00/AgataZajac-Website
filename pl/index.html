@@ -724,9 +724,10 @@ class Component extends DCLogic {
 
   // Grieg, In the Hall of the Mountain King. Recording by Kevin MacLeod
   // (incompetech.com, ISRC USUAN1200072), CC BY — the licence requires the
-  // credit line kept in the game overlay. Playback rate is driven by the game's
-  // tempo, so the music accelerates with the runner rather than waiting for
-  // the track's own accelerando, and it loops if a game outlasts it.
+  // credit line kept in the game overlay. Played at its own speed: Grieg wrote
+  // the accelerando into the piece, and driving playbackRate stuttered badly on
+  // iOS Safari while shifting the pitch enough to mangle the tune. The track
+  // loops if a game outlasts it.
   _startMusic() {
     if (this._track) {
       if (this._ctx && this._ctx.state === "suspended") this._ctx.resume();
@@ -749,7 +750,7 @@ class Component extends DCLogic {
     this._track = el;
     // iOS silences plain <audio> when the ring/silent switch is on, but plays
     // audio routed through an AudioContext. Piping the element through one
-    // costs nothing elsewhere and keeps playbackRate working.
+    // costs nothing elsewhere.
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC && !this._ctx) {
@@ -771,20 +772,9 @@ class Component extends DCLogic {
     const p = el.play();
     if (p && p.catch) p.catch(() => {});
 
-    // Follow the game's tempo. Rate also lifts the pitch, which suits this
-    // piece: it is written to accelerate and rise anyway.
-    this._rateTimer = setInterval(() => {
-      if (!this._track) return;
-      const speed = (this._game && this._game.speed) || 4.2;
-      const t = Math.max(0, Math.min(1, (speed - 4.2) / 6));
-      const rate = 0.92 + t * 0.55;
-      try { this._track.playbackRate = rate; } catch (e) {}
-    }, 250);
   }
 
   _stopMusic() {
-    if (this._rateTimer) clearInterval(this._rateTimer);
-    this._rateTimer = null;
     // The context is kept for the session: createMediaElementSource can only
     // be called once per element, and re-creating contexts leaks on iOS.
     if (this._ctx && this._ctx.state === "running") {
