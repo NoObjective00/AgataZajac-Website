@@ -339,11 +339,12 @@
     <div style="position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: rgba(8,7,6,0.96)">
       <p style="margin: 0; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: #c39554">An encore — Largo to Presto</p>
       <canvas ref="{{ gameCanvas }}" style="display: block; width: min(880px, 100%); height: 300px; border: 1px solid rgba(236,231,223,0.18); touch-action: none; cursor: pointer"></canvas>
-      <div style="display: flex; align-items: center; gap: 18px">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap">
         <p style="margin: 0; font-size: 12px; letter-spacing: 0.06em; color: rgba(236,231,223,0.55)">Tap the stage or press space to jump</p>
         <button type="button" onClick="{{ toggleMute }}" style="appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; padding: 10px 18px; cursor: pointer" style-hover="border-color: #c39554; color: #c39554">{{ muteLabel }}</button>
         <button type="button" onClick="{{ closeGame }}" style="appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; padding: 10px 18px; cursor: pointer" style-hover="border-color: #c39554; color: #c39554">Close</button>
       </div>
+      <p style="margin: 0; max-width: 620px; text-align: center; font-size: 12px; letter-spacing: 0.04em; line-height: 1.55; color: rgba(236,231,223,0.62)">“In the Hall of the Mountain King” Kevin MacLeod (incompetech.com), licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color: rgba(236,231,223,0.85); border-bottom: 1px solid rgba(236,231,223,0.35)">Creative Commons: By Attribution 4.0</a></p>
     </div>
   </sc-if>
 
@@ -690,181 +691,64 @@ class Component extends DCLogic {
     { at: 620, speed: 10.2, name: "Presto", gloss: "very fast" }
   ];
 
-  // Grieg, In the Hall of the Mountain King (1875, public domain), synthesised
-  // rather than sampled: semitones from B2 with each note's length in eighths.
-  // The theme accelerates in the original too, so it tracks the game's tempo.
-  static TUNE = (() => {
-    // B minor, semitones from B2. Four phrases: the tonic statement, its
-    // answer falling to F#, then the same shape up a third, answering to A.
-    const A  = [0, 2, 3, 5, 3, 0, 3, 0];
-    const A2 = [0, 2, 3, 5, 3, 0, -5, null];
-    const B  = [3, 5, 7, 8, 7, 3, 7, 3];
-    const B2 = [3, 5, 7, 8, 7, 3, -2, null];
-    return [...A, ...A2, ...B, ...B2].map(s => ({ s, d: 1 }));
-  })();
-
-  // A plucked-string voice: two slightly detuned saws through a lowpass whose
-  // cutoff falls with the note, which is what gives a pizzicato its thud and
-  // quick darkening rather than a flat beep.
-  // A short burst of noise, used as the finger-on-string transient. Real
-  // pizzicato is mostly attack noise; without it a synth pluck sounds fake.
-  _noiseBuffer() {
-    if (this._noise) return this._noise;
-    const ac = this._audio;
-    const buf = ac.createBuffer(1, ac.sampleRate * 0.12, ac.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) {
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
-    }
-    this._noise = buf;
-    return buf;
-  }
-
-  // Plucked string: noise transient, three detuned partials, a body resonance,
-  // and a two-stage decay — bright and fast, then a longer ringing tail.
-  _playNote(semi, when, dur, gain, bass, pan) {
-    const ac = this._audio;
-    const hz = 123.47 * Math.pow(2, semi / 12);
-    const hold = Math.min(dur * 1.5, bass ? 0.9 : 0.42);
-
-    const env = ac.createGain();
-    const filt = ac.createBiquadFilter();
-    const out = ac.createStereoPanner ? ac.createStereoPanner() : null;
-
-    filt.type = "lowpass";
-    filt.Q.value = bass ? 1.2 : 2.4;
-    filt.frequency.setValueAtTime(hz * (bass ? 7 : 13), when);
-    filt.frequency.exponentialRampToValueAtTime(hz * 2.4, when + 0.07);
-    filt.frequency.exponentialRampToValueAtTime(hz * 1.3, when + hold);
-
-    env.gain.setValueAtTime(0, when);
-    env.gain.linearRampToValueAtTime(gain, when + 0.004);
-    env.gain.exponentialRampToValueAtTime(gain * 0.34, when + 0.055);
-    env.gain.exponentialRampToValueAtTime(gain * 0.1, when + hold * 0.45);
-    env.gain.exponentialRampToValueAtTime(0.0001, when + hold);
-
-    const voices = bass ? [[0, "triangle", 1]] : [[-7, "sawtooth", 1], [6, "sawtooth", 0.75]];
-    for (const [detune, type, level] of voices) {
-      const osc = ac.createOscillator();
-      const vg = ac.createGain();
-      vg.gain.value = level;
-      osc.type = type;
-      osc.frequency.setValueAtTime(hz * 1.004, when);
-      // Strings drop a touch in pitch as the pluck settles.
-      osc.frequency.exponentialRampToValueAtTime(hz, when + 0.05);
-      osc.detune.value = detune;
-      osc.connect(vg).connect(filt);
-      osc.start(when);
-      osc.stop(when + hold + 0.06);
-    }
-
-    const noise = ac.createBufferSource();
-    const ng = ac.createGain();
-    const nf = ac.createBiquadFilter();
-    noise.buffer = this._noiseBuffer();
-    nf.type = "bandpass";
-    nf.frequency.value = Math.min(5200, hz * 8);
-    nf.Q.value = 0.9;
-    ng.gain.setValueAtTime(gain * (bass ? 0.3 : 0.55), when);
-    ng.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
-    noise.connect(nf).connect(ng).connect(filt);
-    noise.start(when);
-    noise.stop(when + 0.12);
-
-    filt.connect(env);
-    if (out) {
-      out.pan.value = pan || 0;
-      env.connect(out).connect(this._musicBus);
-    } else {
-      env.connect(this._musicBus);
-    }
-  }
-
+  // Grieg, In the Hall of the Mountain King. Recording by Kevin MacLeod
+  // (incompetech.com, ISRC USUAN1200072), CC BY — the licence requires the
+  // credit line kept in the game overlay. Playback rate is driven by the game's
+  // tempo, so the music accelerates with the runner rather than waiting for
+  // the track's own accelerando, and it loops if a game outlasts it.
   _startMusic() {
-    if (this._audio) return;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    const ac = this._audio = new AC();
-    this._musicGain = ac.createGain();
-    this._musicGain.gain.value = this._muted ? 0 : 0.5;
-    this._musicGain.connect(ac.destination);
+    if (this._track) return;
+    // The language pages live one level down (/fr/, /es/…) but share the
+    // audio at the root, so the path is resolved rather than hard-coded.
+    const inLangFolder = /\/(fr|es|de|pl)\/$/.test(window.location.pathname);
+    const src = this._audioSrc || (inLangFolder ? "../audio/mountain-king.mp3" : "./audio/mountain-king.mp3");
+    const el = new Audio(src);
+    el.loop = true;
+    // Nothing is fetched until the first jump, so visitors who never find the
+    // easter egg never download it.
+    el.preload = "none";
+    el.volume = this._muted ? 0 : 0.55;
+    this._track = el;
+    // play() must be called straight from the gesture: it starts the load
+    // itself, so waiting on readyState or canplay first would mean waiting
+    // for an event that never fires while preload is off — and the gesture
+    // would have expired by then anyway.
+    const p = el.play();
+    if (p && p.catch) p.catch(() => {});
 
-    // A short feedback delay stands in for hall reverb — dry-sounding plucks
-    // are what made the first attempt feel cheap.
-    // One shared body resonance on the bus rather than a filter per note —
-    // same colour, a fraction of the node count.
-    this._musicBus = ac.createGain();
-    const bodyEq = ac.createBiquadFilter();
-    bodyEq.type = "peaking";
-    bodyEq.frequency.value = 360;
-    bodyEq.Q.value = 0.7;
-    bodyEq.gain.value = 5;
-    const wet = ac.createGain();
-    const delay = ac.createDelay();
-    const fb = ac.createGain();
-    const damp = ac.createBiquadFilter();
-    delay.delayTime.value = 0.085;
-    fb.gain.value = 0.42;
-    wet.gain.value = 0.36;
-    damp.type = "lowpass";
-    damp.frequency.value = 2200;
-    this._musicBus.connect(bodyEq).connect(this._musicGain);
-    this._musicBus.connect(delay);
-    delay.connect(damp).connect(fb).connect(delay);
-    damp.connect(wet).connect(this._musicGain);
-
-    this._tuneAt = 0;
-    this._nextNoteTime = this._audio.currentTime + 0.08;
-
-    // Schedule further ahead, less often: the old 60ms interval built nodes in
-    // bursts that stole frames from the animation.
-    this._musicTimer = setInterval(() => {
-      if (!this._audio || this._muted) return;
+    // Follow the game's tempo. Rate also lifts the pitch, which suits this
+    // piece: it is written to accelerate and rise anyway.
+    this._rateTimer = setInterval(() => {
+      if (!this._track) return;
       const speed = (this._game && this._game.speed) || 4.2;
-      const eighth = Math.max(0.105, 0.285 - (speed - 4.2) * 0.020);
-      while (this._nextNoteTime < this._audio.currentTime + 0.6) {
-        const i = this._tuneAt % Component.TUNE.length;
-        const n = Component.TUNE[i];
-        const dur = n.d * eighth;
-        if (n.s !== null) {
-          // Accent the first of each pair, as a pizzicato line naturally falls.
-          const accent = i % 2 === 0 ? 0.34 : 0.24;
-          // A hair of human unsteadiness in timing and level, and the line
-          // placed just left of centre as a section would sit.
-          const drift = (Math.random() - 0.5) * 0.008;
-          this._playNote(n.s, this._nextNoteTime + drift, dur, accent * (0.94 + Math.random() * 0.12), false, -0.15);
-          if (i % 8 === 0) this._playNote(n.s - 24, this._nextNoteTime, dur * 4, 0.3, true, 0.2);
-        }
-        this._nextNoteTime += dur;
-        this._tuneAt++;
-      }
-    }, 220);
+      const t = Math.max(0, Math.min(1, (speed - 4.2) / 6));
+      const rate = 0.92 + t * 0.55;
+      try { this._track.playbackRate = rate; } catch (e) {}
+    }, 250);
   }
 
   _stopMusic() {
-    if (this._musicTimer) clearInterval(this._musicTimer);
-    this._musicTimer = null;
-    // Cut the output before closing: notes are scheduled up to 250ms ahead,
-    // so without this the tail keeps sounding after the context goes away.
-    if (this._musicGain) {
-      try { this._musicGain.gain.value = 0; this._musicGain.disconnect(); } catch (e) {}
-    }
-    if (this._musicBus) {
-      try { this._musicBus.disconnect(); } catch (e) {}
-    }
-    this._musicGain = null;
-    this._musicBus = null;
-    if (this._audio) {
-      const ac = this._audio;
-      this._audio = null;
-      try { ac.close(); } catch (e) {}
+    if (this._rateTimer) clearInterval(this._rateTimer);
+    this._rateTimer = null;
+    if (this._track) {
+      const el = this._track;
+      this._track = null;
+      try { el.pause(); el.currentTime = 0; el.src = ""; } catch (e) {}
     }
   }
 
   toggleMute = () => {
     this._muted = !this.state.muted;
     this.setState({ muted: this._muted });
-    if (this._musicGain) this._musicGain.gain.value = this._muted ? 0 : 0.5;
+    // Unmuting is a gesture in its own right, so it can start playback.
+    if (!this._muted) this._startMusic();
+    if (this._track) {
+      this._track.volume = this._muted ? 0 : 0.55;
+      if (!this._muted && this._track.paused) {
+        const p = this._track.play();
+        if (p && p.catch) p.catch(() => {});
+      }
+    }
   };
 
   _startGame() {
@@ -897,7 +781,6 @@ class Component extends DCLogic {
       // Browsers only allow audio to start from a gesture, so the first tap
       // or keypress is what opens the music.
       this._startMusic();
-      if (this._audio && this._audio.state === "suspended") this._audio.resume();
       if (G.over) { reset(); return; }
       if (!player.air) { player.vy = -11.4; player.air = true; }
     };
