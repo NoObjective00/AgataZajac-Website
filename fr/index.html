@@ -291,28 +291,55 @@
     #gallery .gallery-toggle { display: inline-block; }
   }
   @media (max-width: 760px) {
-    /* Tighter pinned bar: the wordmark and controls share one compact row. */
-    header { padding-top: max(9px, env(safe-area-inset-top)) !important; padding-bottom: 9px !important; }
-    header > a:first-child { font-size: 19px !important; }
-    header .nav-toggle { display: inline-block !important; padding: 8px 12px !important; }
-    header > div:last-of-type { gap: 10px !important; font-size: 10px !important; }
+    /* One clean row: wordmark left, toggle hard right where it is expected.
+       The language codes move into the opened panel rather than crowding it. */
+    header { padding-top: max(3px, env(safe-area-inset-top)) !important; padding-bottom: 7px !important; row-gap: 0 !important; align-items: center !important; }
+    /* Wordmark left, Menu hard right; the language codes sit on their own
+       row beneath, aligned under the toggle. */
+    header > a:first-child { font-size: 18px !important; order: 1; margin-right: auto; }
+    header .nav-toggle { display: inline-block !important; order: 3; padding: 7px 11px !important; font-size: 10px !important; }
+    header .lang-group { order: 2; margin-right: 8px; }
+    header .lang-toggle { display: flex !important; }
+    header .lang-switch { display: none !important; }
+    header .lang-group[data-open] .lang-switch {
+      display: flex !important;
+      position: absolute;
+      top: calc(100% + 7px);
+      right: 0;
+      z-index: 60;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      min-width: 92px;
+      padding: 4px 0;
+      background: #16130f;
+      border: 1px solid rgba(236,231,223,0.18);
+    }
+    header .lang-group[data-open] .lang-switch a {
+      padding: 10px 16px !important;
+      border-bottom: 0 !important;
+      font-size: 11px;
+    }
     header .site-nav { display: none !important; }
     header[data-nav] .site-nav {
       display: flex !important;
       flex-direction: column;
       gap: 0;
       width: 100%;
-      order: 3;
-      margin-top: 12px;
-      padding-top: 8px;
+      order: 5;
+      margin-top: 8px;
+      padding-top: 6px;
       border-top: 1px solid rgba(236,231,223,0.14);
     }
-    header[data-nav] .site-nav a { padding: 13px 0; font-size: 13px; }
+    header[data-nav] .site-nav a { padding: 11px 0; font-size: 13px; }
+
   }
   @media (max-width: 760px) {
     /* Taller frame + a tighter copy block: together these drop the text well
        below her face, which sits around 40% down the photograph. */
     #top { min-height: 100svh !important; }
+    /* Trim the top 8% of the hero frame on phones so her face sits higher. */
+    #top .hero-media { top: -8% !important; height: 108% !important; left: -4% !important; width: 108% !important; }
     #top .hero-copy { padding-bottom: 14px !important; }
     #top .hero-copy .role { margin-bottom: 12px !important; }
     #top .hero-copy h1 { font-size: 42px !important; margin-bottom: 14px !important; }
@@ -326,7 +353,7 @@
 
   <header data-nav="{{ navOpenAttr }}" style="position: sticky; top: 0; z-index: 50; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: max(14px, env(safe-area-inset-top)) clamp(20px, 4vw, 40px) 14px; background: rgba(14,13,12,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(236,231,223,0.12)">
     <a href="#top" style="font-family: 'Bodoni Moda', serif; font-size: 20px; letter-spacing: 0.06em">Agata Zając</a>
-    <button class="nav-toggle" type="button" onClick="{{ toggleNav }}" aria-label="{{ t.menu }}" style="display: none; appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; padding: 11px 16px; cursor: pointer">{{ navLabel }}</button>
+    <button class="nav-toggle" type="button" onClick="{{ toggleNav }}" aria-label="{{ navLabel }}" style="display: none; appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; padding: 11px 16px; cursor: pointer">{{ navLabel }}</button>
     <nav class="site-nav" style="display: flex; gap: 28px; flex-wrap: wrap; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(236,231,223,0.66)">
       <a href="#upcoming" onClick="{{ closeNav }}">{{ t.navUpcoming }}</a>
       <a href="#biography" onClick="{{ closeNav }}">{{ t.navBio }}</a>
@@ -336,12 +363,15 @@
       <a href="#gallery" onClick="{{ closeNav }}">{{ t.navGallery }}</a>
       <a href="#contact" onClick="{{ closeNav }}">{{ t.navContact }}</a>
     </nav>
-    <div style="display: flex; align-items: center; gap: 14px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase">
+    <div class="lang-group" data-open="{{ langOpenAttr }}" style="position: relative; display: flex; align-items: center">
+    <button class="lang-toggle" type="button" onClick="{{ toggleLang }}" aria-label="Language" style="appearance: none; background: transparent; border: 1px solid rgba(236,231,223,0.28); color: #ece7df; font-family: Archivo, sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 7px 11px; cursor: pointer; display: none; align-items: center; gap: 6px">{{ langLabel }}<span style="display: block; width: 0; height: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; border-top: 4px solid #ece7df"></span></button>
+    <div class="lang-switch" style="display: flex; align-items: center; gap: 14px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase">
       <a href="/" hreflang="en" style="color: rgba(236,231,223,0.5); border-bottom: 1px solid transparent; padding-bottom: 3px">EN</a>
       <a href="/fr/" hreflang="fr" style="color: #c39554; border-bottom: 1px solid #c39554; padding-bottom: 3px">FR</a>
       <a href="/es/" hreflang="es" style="color: rgba(236,231,223,0.5); border-bottom: 1px solid transparent; padding-bottom: 3px">ES</a>
       <a href="/de/" hreflang="de" style="color: rgba(236,231,223,0.5); border-bottom: 1px solid transparent; padding-bottom: 3px">DE</a>
       <a href="/pl/" hreflang="pl" style="color: rgba(236,231,223,0.5); border-bottom: 1px solid transparent; padding-bottom: 3px">PL</a>
+    </div>
     </div>
   </header>
 
@@ -1074,7 +1104,7 @@ class Component extends DCLogic {
     if (this._gameOff) { this._gameOff(); this._gameOff = null; }
   }
   setLang(lang) {
-    return (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ lang }); };
+    return (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ lang, langOpen: false }); };
   }
   langStyle(lang) {
     return this.state.lang === lang
@@ -1092,9 +1122,12 @@ class Component extends DCLogic {
     return {
       t,
       gameOnAttr: this.state.gameOn ? "" : undefined,
+      langOpenAttr: this.state.langOpen ? "" : undefined,
+      langLabel: this.state.lang.toUpperCase(),
+      toggleLang: () => this.setState(s => ({ langOpen: !s.langOpen, navOpen: false })),
       navOpenAttr: this.state.navOpen ? "" : undefined,
       navLabel: this.state.navOpen ? t.close : t.menu,
-      toggleNav: () => this.setState(s => ({ navOpen: !s.navOpen })),
+      toggleNav: () => this.setState(s => ({ navOpen: !s.navOpen, langOpen: false })),
       closeNav: () => this.setState({ navOpen: false }),
       heroTap: this.heroTap,
       gameOn: this.state.gameOn,
