@@ -532,7 +532,7 @@
         <a href="https://www.facebook.com/agata.zajac.95/" target="_blank" rel="noopener" style="font-size: 16px; color: rgba(236,231,223,0.85)">Facebook</a>
       </div>
     </div>
-    <p style="max-width: 1180px; margin: 76px auto 0; padding-top: 24px; border-top: 1px solid rgba(236,231,223,0.12); font-size: 12px; letter-spacing: 0.06em; color: rgba(236,231,223,0.4)">{{ t.footer }}</p>
+    <p style="max-width: 1180px; margin: 76px auto 0; padding-top: 24px; border-top: 1px solid rgba(236,231,223,0.12); font-size: 12px; letter-spacing: 0.06em; color: rgba(236,231,223,0.4)">{{ t.footer }} · v2.1</p>
   </section>
 
 </div>
@@ -780,7 +780,9 @@ class Component extends DCLogic {
     const TEMPI = Component.TEMPI;
     const cv = this._canvas;
     const ctx = cv.getContext("2d");
-    const dpr = window.devicePixelRatio || 1;
+    // A 3x phone renders nine times the pixels of a 1x one, which is what
+    // made this crawl. 1.5 is indistinguishable at this scale.
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1.5 : 2);
     const fit = () => {
       cv.width = cv.clientWidth * dpr;
       cv.height = cv.clientHeight * dpr;
@@ -789,6 +791,31 @@ class Component extends DCLogic {
     fit();
     this._fit = fit;
     window.addEventListener("resize", fit);
+
+    // Glyph cache: fillText with a webfont is the single most expensive call
+    // in the loop, and the notes never change. Draw each once, blit after.
+    const glyph = {};
+    const makeGlyph = (char, size) => {
+      const pad = Math.ceil(size * 0.4);
+      const c = document.createElement("canvas");
+      c.width = Math.ceil((size + pad * 2) * dpr);
+      c.height = Math.ceil((size * 1.6 + pad * 2) * dpr);
+      const g = c.getContext("2d");
+      g.scale(dpr, dpr);
+      g.fillStyle = "#c39554";
+      g.font = size + 'px "Bodoni Moda", Didot, Georgia, serif';
+      g.textBaseline = "alphabetic";
+      g.fillText(char, pad, size * 1.2 + pad);
+      return { canvas: c, w: c.width / dpr, h: c.height / dpr, pad, base: size * 1.2 + pad };
+    };
+    const buildGlyphs = () => {
+      glyph.short = makeGlyph("\u2669", 32);
+      glyph.tall = makeGlyph("\u266B", 42);
+    };
+    buildGlyphs();
+    // Fonts may still be loading when the game opens; redraw the cache once
+    // they land so the notes are not left in a fallback serif.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(buildGlyphs);
 
     const G = { ground: 0, speed: 4.2, score: 0, best: 0, over: false, t: 0, tempo: TEMPI[0], flash: 0 };
     this._game = G;
@@ -876,11 +903,8 @@ class Component extends DCLogic {
 
       // obstacles: quarter and eighth notes sitting on the line
       notes.forEach(n => {
-        const size = n.tall ? 42 : 32;
-        ctx.fillStyle = "#c39554";
-        ctx.font = size + 'px "Bodoni Moda", Didot, Georgia, serif';
-        ctx.textBaseline = "alphabetic";
-        ctx.fillText(n.tall ? "\u266B" : "\u2669", n.x, G.ground);
+        const gl = n.tall ? glyph.tall : glyph.short;
+        ctx.drawImage(gl.canvas, n.x - gl.pad, G.ground - gl.base, gl.w, gl.h);
       });
 
       // Aga: blonde hair, black blouse, white trousers, gold baton
