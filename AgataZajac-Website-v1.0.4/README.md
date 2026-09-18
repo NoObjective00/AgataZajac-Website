@@ -34,6 +34,8 @@ Delete `CNAME` there — Cloudflare sets custom domains in its own dashboard.
 
 ## v1.0.4
 
+- Hidden game: tempo tiers from Largo to Presto, denser notes as it speeds up
+
 - Map: pinch to zoom, drag to pan, and taps snap to the nearest city
 - Zoom buttons for pointer devices
 

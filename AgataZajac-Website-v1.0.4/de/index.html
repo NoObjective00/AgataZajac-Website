@@ -337,7 +337,7 @@
 
   <sc-if value="{{ gameOn }}" hint-placeholder-val="{{ false }}">
     <div style="position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: rgba(8,7,6,0.96)">
-      <p style="margin: 0; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: #c39554">Allegro — an encore</p>
+      <p style="margin: 0; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: #c39554">An encore — Largo to Presto</p>
       <canvas ref="{{ gameCanvas }}" style="display: block; width: min(880px, 100%); height: 300px; border: 1px solid rgba(236,231,223,0.18); touch-action: none; cursor: pointer"></canvas>
       <div style="display: flex; align-items: center; gap: 18px">
         <p style="margin: 0; font-size: 12px; letter-spacing: 0.06em; color: rgba(236,231,223,0.55)">Tap the stage or press space to jump</p>
@@ -678,7 +678,19 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { this._stopGame(); }
 
+  // Tempo marks double as difficulty tiers: the notes arrive faster as the
+  // marking moves from Largo to Presto.
+  static TEMPI = [
+    { at: 0, speed: 4.2, name: "Largo", gloss: "very slow and broad" },
+    { at: 70, speed: 5.4, name: "Adagio", gloss: "slow and graceful" },
+    { at: 160, speed: 6.6, name: "Andante", gloss: "at a walking pace" },
+    { at: 280, speed: 7.9, name: "Moderato", gloss: "at a moderate speed" },
+    { at: 430, speed: 9.4, name: "Allegro", gloss: "fast and lively" },
+    { at: 620, speed: 11.4, name: "Presto", gloss: "very fast" }
+  ];
+
   _startGame() {
+    const TEMPI = Component.TEMPI;
     const cv = this._canvas;
     const ctx = cv.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -691,14 +703,15 @@ class Component extends DCLogic {
     this._fit = fit;
     window.addEventListener("resize", fit);
 
-    const G = { ground: 0, speed: 5.4, score: 0, best: 0, over: false, t: 0 };
+    const G = { ground: 0, speed: 4.2, score: 0, best: 0, over: false, t: 0, tempo: TEMPI[0], flash: 0 };
     const player = { x: 68, y: 0, vy: 0, air: false };
     let notes = [], nextSpawn = 70;
 
     const reset = () => {
-      G.speed = 5.4; G.score = 0; G.over = false; G.t = 0;
+      G.speed = 4.2; G.score = 0; G.over = false; G.t = 0;
+      G.tempo = TEMPI[0]; G.flash = 0;
       player.vy = 0; player.air = false;
-      notes = []; nextSpawn = 70;
+      notes = []; nextSpawn = 56;
     };
     const jump = () => {
       if (G.over) { reset(); return; }
@@ -738,13 +751,23 @@ class Component extends DCLogic {
 
       if (!G.over) {
         G.t++;
-        G.speed = 5.4 + G.score / 900;
+        const tier = TEMPI.filter(t => G.score >= t.at).pop();
+        if (tier !== G.tempo) { G.tempo = tier; G.flash = 90; }
+        G.speed = tier.speed + (G.score - tier.at) / 700;
+        if (G.flash > 0) G.flash--;
         player.vy += 0.62;
         player.y += player.vy;
         if (player.y > 0) { player.y = 0; player.vy = 0; player.air = false; }
         if (--nextSpawn <= 0) {
-          notes.push({ x: w + 20, tall: Math.random() < 0.34 });
-          nextSpawn = 58 + Math.round(Math.random() * 52);
+          notes.push({ x: w + 20, tall: Math.random() < 0.38 });
+          // From Andante on, notes sometimes arrive in pairs — a short gap
+          // that must be cleared in one jump.
+          if (G.score > 160 && Math.random() < 0.3) {
+            notes.push({ x: w + 20 + 30 + Math.round(Math.random() * 14), tall: Math.random() < 0.3 });
+          }
+          // The gap shrinks with the tempo, so the notes keep coming thicker.
+          const tight = Math.max(20, 44 - G.score / 26);
+          nextSpawn = tight + Math.round(Math.random() * (tight * 0.7));
         }
         notes.forEach(n => { n.x -= G.speed; });
         notes = notes.filter(n => n.x > -40);
@@ -861,6 +884,21 @@ class Component extends DCLogic {
       ctx.textAlign = "right";
       ctx.fillText("BARS " + Math.floor(G.score) + (G.best ? "   BEST " + G.best : ""), w - 14, 24);
       ctx.textAlign = "left";
+
+      // current marking, top left in the display serif
+      ctx.fillStyle = "#c39554";
+      ctx.font = 'italic 22px "Bodoni Moda", Didot, Georgia, serif';
+      ctx.fillText(G.tempo.name, 14, 28);
+
+      // and its gloss, announced briefly on each change of tempo
+      if (G.flash > 0 && !G.over) {
+        const fade = Math.min(1, G.flash / 30);
+        ctx.fillStyle = "rgba(236,231,223," + (0.85 * fade).toFixed(3) + ")";
+        ctx.font = 'italic 15px "Bodoni Moda", Didot, Georgia, serif';
+        ctx.textAlign = "center";
+        ctx.fillText(G.tempo.name + " — " + G.tempo.gloss, w / 2, 40);
+        ctx.textAlign = "left";
+      }
 
       if (G.over) {
         ctx.fillStyle = "rgba(236,231,223,0.92)";
